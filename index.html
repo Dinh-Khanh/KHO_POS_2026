@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <title>Khờ Coffee POS</title>
+    <meta name="apple-mobile-web-app-title" content="Khờ POS">
+    <meta name="application-name" content="Khờ POS">
+    
+    <link rel="icon" type="image/png" href="https://img.icons8.com/ios-filled/512/000000/cafe.png">
+    <link rel="apple-touch-icon" href="https://img.icons8.com/ios-filled/512/000000/cafe.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@800;900&display=swap" rel="stylesheet">
+
+    <style>
+        /* Strict Black & White Palette (Light Mode) */
+        :root {
+            --bg-color: #f5f5f5;
+            --card-bg: #ffffff;
+            --text-main: #000000;
+            --text-muted: #666666;
+            --border-color: #cccccc;
+            --highlight: #000000;
+            --highlight-text: #ffffff;
+            --control-active: #e0e0e0;
+        }
+
+        body { 
+            font-family: Arial, Helvetica, sans-serif; 
+            background-color: var(--bg-color); 
+            color: var(--text-main); 
+            margin: 0; 
+            padding: 0; 
+            padding-bottom: 90px; 
+            -webkit-tap-highlight-color: transparent; 
+        }
+
+        /* Header */
+        .header { background-color: var(--card-bg); border-bottom: 2px solid var(--text-main); padding: 22px; text-align: center; position: sticky; top: 0; z-index: 10; }
+        .header h1 { font-family: 'Montserrat', sans-serif; margin: 0; font-size: 1.8rem; color: var(--text-main); letter-spacing: 2px; text-transform: uppercase; font-weight: 900; }
+        
+        .container { padding: 16px; max-width: 600px; margin: 0 auto; }
+        
+        /* Cards */
+        .card { background: var(--card-bg); border-radius: 8px; padding: 24px; margin-bottom: 20px; border: 1px solid var(--border-color); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        
+        /* Card Titles */
+        .card-title { font-family: 'Montserrat', sans-serif; font-size: 1.1rem; font-weight: 800; color: var(--text-main); text-transform: uppercase; margin-top: 0; border-bottom: 3px solid var(--text-main); padding-bottom: 12px; margin-bottom: 20px; letter-spacing: 1px; }
+        
+        /* Forms & Inputs */
+        input[type="date"], input[type="number"], input[type="text"] { width: 100%; padding: 14px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 1rem; box-sizing: border-box; background-color: var(--card-bg); color: var(--text-main); outline: none; transition: 0.2s; font-family: Arial, Helvetica, sans-serif; font-weight: bold; }
+        input:focus { border-color: var(--text-main); box-shadow: 0 0 0 2px rgba(0,0,0,0.1); }
+        input::placeholder { color: var(--text-muted); font-weight: normal; }
+        
+        /* Labels */
+        label { display: block; font-size: 0.85rem; font-weight: bold; color: var(--text-main); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;}
+
+        /* Menu Items */
+        .menu-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--border-color); }
+        .menu-item:last-child { border-bottom: none; }
+        .item-info .name { font-weight: bold; font-size: 1.1rem; color: var(--text-main); } 
+        .item-info .price { color: var(--text-muted); font-size: 0.9rem; margin-top: 4px; font-weight: bold; }
+        
+        /* Controls */
+        .controls { display: flex; align-items: center; background: var(--card-bg); border-radius: 4px; overflow: hidden; border: 1px solid var(--text-main); }
+        .btn-action { width: 42px; height: 42px; border: none; background: transparent; font-size: 1.4rem; font-weight: bold; color: var(--text-main); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.1s; border-right: 1px solid var(--border-color); }
+        .btn-action:last-child { border-right: none; border-left: 1px solid var(--border-color); }
+        .btn-action:active { background: var(--control-active); }
+        .qty { min-width: 40px; text-align: center; font-weight: bold; font-size: 1.1rem; color: var(--text-main); }
+
+        /* Cost Grid */
+        .cost-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .cost-item { display: flex; flex-direction: column; height: 100%; }
+        .cost-item label { margin-bottom: auto; padding-bottom: 8px; }
+        .cost-item input { margin-bottom: 0; }
+
+        /* Footer & Submit */
+        .footer { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--card-bg); padding: 16px; box-sizing: border-box; border-top: 2px solid var(--text-main); }
+        .btn-submit { font-family: 'Montserrat', sans-serif; width: 100%; max-width: 600px; margin: 0 auto; display: block; background-color: var(--highlight); color: var(--highlight-text); padding: 18px; border: none; border-radius: 4px; font-size: 1.1rem; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; transition: 0.2s; cursor: pointer; }
+        .btn-submit:active { transform: scale(0.98); background-color: #333333; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>Khờ Coffee</h1>
+</div>
+
+<div class="container">
+    <div class="card">
+        <h2 class="card-title">Date of Record</h2>
+        <input type="date" id="sale-date" onchange="saveLocalState()" style="margin-bottom: 0;">
+    </div>
+
+    <div class="card">
+        <h2 class="card-title">Drinks Sold</h2>
+        <div id="menu-list"></div>
+    </div>
+
+    <div class="card">
+        <h2 class="card-title">Material Costs ($)</h2>
+        <div class="cost-grid">
+            <div class="cost-item">
+                <label>Coffee</label>
+                <input type="number" id="cost-coffee" placeholder="0" oninput="saveLocalState()">
+            </div>
+            <div class="cost-item">
+                <label>Fresh Milk</label>
+                <input type="number" id="cost-fresh_milk" placeholder="0" oninput="saveLocalState()">
+            </div>
+            <div class="cost-item">
+                <label>Condensed Milk</label>
+                <input type="number" id="cost-condensed_milk" placeholder="0" oninput="saveLocalState()">
+            </div>
+            <div class="cost-item">
+                <label>Plastic Cup</label>
+                <input type="number" id="cost-plastic_cup" placeholder="0" oninput="saveLocalState()">
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2 class="card-title">Daily Notes</h2>
+        <input type="text" id="note" placeholder="e.g., Weekend, heavy rain, etc." oninput="saveLocalState()" style="margin-bottom:0;">
+    </div>
+</div>
+
+<div class="footer">
+    <button class="btn-submit" id="btnSend" onclick="sendData()">Sync to Excel</button>
+</div>
+
+<script>
+    // PASTE YOUR GOOGLE SCRIPT URL HERE
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwusW-aXDoL4gyuywmnZxeTsPHswvKenOY4uC0GhityagFJdIyFwxmM5eeJjTg-HX6gLw/exec";
+
+    const menuData = [
+        { id: "iced", name: "Iced Coffee", price: "$12" },
+        { id: "milk", name: "Milk Coffee", price: "$15" },
+        { id: "bacxiu", name: "Bac Xiu", price: "$15" },
+        { id: "combo", name: "Combo", price: "$10" },
+        { id: "iced_m", name: "Iced (Machine)", price: "$18" },
+        { id: "milk_m", name: "Milk (Machine)", price: "$20" },
+        { id: "combo_m", name: "Combo (Machine)", price: "$15" }
+    ];
+
+    let sales = {};
+    menuData.forEach(item => sales[item.id] = 0);
+
+    // HÀM LƯU DỮ LIỆU VÀO BỘ NHỚ TẠM
+    function saveLocalState() {
+        const state = {
+            date: document.getElementById('sale-date').value,
+            sales: sales,
+            costs: {
+                coffee: document.getElementById('cost-coffee').value,
+                fresh_milk: document.getElementById('cost-fresh_milk').value,
+                condensed_milk: document.getElementById('cost-condensed_milk').value,
+                plastic_cup: document.getElementById('cost-plastic_cup').value
+            },
+            note: document.getElementById('note').value
+        };
+        localStorage.setItem('khoCoffeeBackup', JSON.stringify(state));
+    }
+
+    // HÀM TẢI LẠI DỮ LIỆU KHI MỞ APP
+    function loadLocalState() {
+        const saved = localStorage.getItem('khoCoffeeBackup');
+        if (saved) {
+            const state = JSON.parse(saved);
+            
+            if (state.date) document.getElementById('sale-date').value = state.date;
+            if (state.sales) sales = state.sales;
+            
+            if (state.costs) {
+                document.getElementById('cost-coffee').value = state.costs.coffee || '';
+                document.getElementById('cost-fresh_milk').value = state.costs.fresh_milk || '';
+                document.getElementById('cost-condensed_milk').value = state.costs.condensed_milk || '';
+                document.getElementById('cost-plastic_cup').value = state.costs.plastic_cup || '';
+            }
+            if (state.note) document.getElementById('note').value = state.note || '';
+        } else {
+            document.getElementById('sale-date').valueAsDate = new Date();
+        }
+    }
+
+    function renderMenu() {
+        let html = "";
+        menuData.forEach(item => {
+            html += `
+            <div class="menu-item">
+                <div class="item-info">
+                    <div class="name">${item.name}</div>
+                    <div class="price">${item.price}</div>
+                </div>
+                <div class="controls">
+                    <button class="btn-action" onclick="updateQty('${item.id}', -1)">−</button>
+                    <div class="qty" id="qty-${item.id}">${sales[item.id]}</div>
+                    <button class="btn-action" onclick="updateQty('${item.id}', 1)">+</button>
+                </div>
+            </div>`;
+        });
+        document.getElementById('menu-list').innerHTML = html;
+    }
+
+    function updateQty(id, change) {
+        if (sales[id] + change >= 0) {
+            sales[id] += change;
+            document.getElementById(`qty-${id}`).innerText = sales[id];
+            
+            // Lưu ngay mỗi khi bấm nút
+            saveLocalState();
+
+            if (window.navigator && window.navigator.vibrate) navigator.vibrate(10);
+        }
+    }
+
+    function formatDate(dateStr) {
+        let parts = dateStr.split("-");
+        return `${parts[2]}/${parts[1]}/${parts[0]}`; 
+    }
+
+    async function sendData() {
+        const btn = document.getElementById('btnSend');
+        const dateVal = document.getElementById('sale-date').value;
+        
+        if (!dateVal) return alert("Please select a date!");
+        if (SCRIPT_URL === "YOUR_GOOGLE_SCRIPT_URL_HERE") return alert("Please add your Google Script URL to the code.");
+
+        const payload = {
+            date: formatDate(dateVal),
+            drinks: sales,
+            costs: {
+                coffee: document.getElementById('cost-coffee').value,
+                fresh_milk: document.getElementById('cost-fresh_milk').value,
+                condensed_milk: document.getElementById('cost-condensed_milk').value,
+                plastic_cup: document.getElementById('cost-plastic_cup').value
+            },
+            note: document.getElementById('note').value
+        };
+
+        btn.innerText = "PROCESSING...";
+        btn.disabled = true;
+        btn.style.opacity = "0.7";
+
+        try {
+            await fetch(SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                body: JSON.stringify(payload)
+            });
+            
+            alert(`Successfully synced data for ${payload.date}!`);
+            
+            // SAU KHI GỬI THÀNH CÔNG: Xóa sạch bộ nhớ và đưa mọi thứ về 0
+            localStorage.removeItem('khoCoffeeBackup');
+            menuData.forEach(item => sales[item.id] = 0);
+            document.querySelectorAll('input[type="number"], input[type="text"]').forEach(el => el.value = "");
+            renderMenu();
+            
+        } catch (error) {
+            alert("Connection error: " + error.message);
+        } finally {
+            btn.innerText = "SYNC TO EXCEL";
+            btn.disabled = false;
+            btn.style.opacity = "1";
+        }
+    }
+
+    // Khởi chạy
+    loadLocalState();
+    renderMenu();
+</script>
+
+</body>
+</html>
