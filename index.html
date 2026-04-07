@@ -41,8 +41,8 @@
         input::placeholder { color: var(--text-muted); font-weight: normal; }
         label { display: block; font-size: 0.85rem; font-weight: bold; color: var(--text-main); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;}
 
-        /* Ngày tháng tiếng Anh hiển thị lớn */
-        .date-display { font-family: 'Montserrat', sans-serif; font-size: 0.9rem; font-weight: 300; color: var(--text-main); text-align: center; margin-top: 15px; margin-bottom: 15px; letter-spacing: 0.5px;}
+        /* Ngày tháng hiển thị dạng chữ thường tự nhiên */
+        .date-display { font-family: 'Montserrat', sans-serif; font-size: 1.1rem; font-weight: 800; color: var(--text-main); text-align: center; margin-top: 15px; margin-bottom: 15px; text-transform: none; }
 
         .menu-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--border-color); }
         .menu-item:last-child { border-bottom: none; }
@@ -60,13 +60,39 @@
         .cost-item label { margin-bottom: auto; padding-bottom: 8px; }
         .cost-item input { margin-bottom: 0; }
 
-        .footer { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--card-bg); padding: 16px; box-sizing: border-box; border-top: 2px solid var(--text-main); }
+        .footer { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--card-bg); padding: 16px; box-sizing: border-box; border-top: 2px solid var(--text-main); z-index: 20; }
         .btn-submit { font-family: 'Montserrat', sans-serif; width: 100%; max-width: 600px; margin: 0 auto; display: block; background-color: var(--highlight); color: var(--highlight-text); padding: 18px; border: none; border-radius: 4px; font-size: 1.1rem; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; transition: 0.2s; cursor: pointer; }
         .btn-submit:active { transform: scale(0.98); background-color: #333333; }
         
-        /* Nút Tải Dữ Liệu */
-        .btn-load { font-family: 'Montserrat', sans-serif; width: 100%; background-color: transparent; border: 2px solid var(--text-main); color: var(--text-main); padding: 14px; border-radius: 4px; font-size: 0.9rem; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; transition: 0.2s;}
+        /* Nút Tải Dữ Liệu (Không in hoa, gọn gàng) */
+        .btn-load { font-family: 'Montserrat', sans-serif; width: 100%; background-color: transparent; border: 2px solid var(--text-main); color: var(--text-main); padding: 12px; border-radius: 4px; font-size: 1rem; font-weight: 800; cursor: pointer; transition: 0.2s; text-transform: none; }
         .btn-load:active { background-color: var(--control-active); }
+
+        /* Giao diện Thông Báo Nhỏ (Toast) */
+        #toast {
+            visibility: hidden;
+            min-width: 220px;
+            background-color: var(--text-main);
+            color: var(--card-bg);
+            text-align: center;
+            border-radius: 30px;
+            padding: 14px 20px;
+            position: fixed;
+            z-index: 9999;
+            left: 50%;
+            bottom: 20px;
+            transform: translateX(-50%);
+            font-size: 0.95rem;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            opacity: 0;
+            transition: opacity 0.3s, bottom 0.3s;
+        }
+        #toast.show {
+            visibility: visible;
+            opacity: 1;
+            bottom: 100px; /* Đẩy cao lên để không bị che bởi nút Sync */
+        }
     </style>
 </head>
 <body>
@@ -80,7 +106,7 @@
         <h2 class="card-title">Date of Record</h2>
         <input type="date" id="sale-date" onchange="handleDateChange()" style="margin-bottom: 0;">
         <div class="date-display" id="formatted-date"></div>
-        <button class="btn-load" id="btnLoad" onclick="fetchData()">Load Data</button>
+        <button class="btn-load" id="btnLoad" onclick="fetchData()">Load data</button>
     </div>
 
     <div class="card">
@@ -120,8 +146,10 @@
     <button class="btn-submit" id="btnSend" onclick="sendData()">Sync to Excel</button>
 </div>
 
+<div id="toast"></div>
+
 <script>
-    // DÁN LINK GOOGLE SCRIPT CỦA BẠN VÀO ĐÂY
+    // PASTE YOUR GOOGLE SCRIPT URL HERE
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwusW-aXDoL4gyuywmnZxeTsPHswvKenOY4uC0GhityagFJdIyFwxmM5eeJjTg-HX6gLw/exec";
 
     const menuData = [
@@ -137,20 +165,32 @@
     let sales = {};
     menuData.forEach(item => sales[item.id] = 0);
 
-    // KHI THAY ĐỔI NGÀY TRÊN LỊCH
+    // --- HỆ THỐNG THÔNG BÁO NHỎ (TOAST) ---
+    let toastTimeout;
+    function showToast(message) {
+        const toast = document.getElementById("toast");
+        toast.innerText = message;
+        toast.classList.add("show");
+        
+        // Reset thời gian tắt nếu người dùng bấm nhiều lần
+        clearTimeout(toastTimeout);
+        toastTimeout = setTimeout(() => {
+            toast.classList.remove("show");
+        }, 3000); // 3 giây sẽ tự mờ đi
+    }
+
+    // --- CÁC TÁC VỤ ỨNG DỤNG ---
     function handleDateChange() {
         saveLocalState();
         updateDateDisplay();
     }
 
-    // CHUYỂN ĐỔI NGÀY SANG TIẾNG ANH (CÓ THỨ)
     function updateDateDisplay() {
         const dateInput = document.getElementById('sale-date').value;
         if (!dateInput) return;
         
         const d = new Date(dateInput);
         const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-        // Ví dụ: "Tuesday, April 07, 2026"
         document.getElementById('formatted-date').innerText = d.toLocaleDateString('en-US', options);
     }
 
@@ -183,7 +223,6 @@
             }
             if (state.note) document.getElementById('note').value = state.note || '';
         } else {
-            // Lấy ngày hôm nay theo giờ địa phương
             const today = new Date();
             const offset = today.getTimezoneOffset() * 60000;
             const localISOTime = (new Date(today - offset)).toISOString().split('T')[0];
@@ -225,22 +264,17 @@
         return `${parts[2]}/${parts[1]}/${parts[0]}`; 
     }
 
-    // TÍNH NĂNG MỚI: TẢI DỮ LIỆU TỪ EXCEL XUỐNG
     async function fetchData() {
         const dateVal = document.getElementById('sale-date').value;
-        if (!dateVal) return alert("Please select a date!");
+        if (!dateVal) return showToast("Please select a date!");
         
         const btn = document.getElementById('btnLoad');
-        btn.innerText = "LOADING...";
+        btn.innerText = "Loading...";
         btn.disabled = true;
 
-        const payload = {
-            action: "read",
-            date: formatDate(dateVal)
-        };
+        const payload = { action: "read", date: formatDate(dateVal) };
 
         try {
-            // Gửi request tiêu chuẩn để lấy data JSON về
             const response = await fetch(SCRIPT_URL, {
                 method: 'POST',
                 body: JSON.stringify(payload),
@@ -250,7 +284,6 @@
             const result = await response.json();
             
             if (result.success) {
-                // Đổ dữ liệu từ Excel vào App
                 sales = result.drinks;
                 document.getElementById('cost-coffee').value = result.costs.coffee;
                 document.getElementById('cost-fresh_milk').value = result.costs.fresh_milk;
@@ -260,28 +293,27 @@
                 
                 renderMenu();
                 saveLocalState();
-                alert("Data loaded successfully!");
+                showToast("Data loaded successfully!");
             } else {
-                alert(result.message);
+                showToast(result.message);
             }
         } catch (error) {
-            alert("Error loading data. Make sure Script is deployed correctly. Detail: " + error.message);
+            showToast("Error loading data. Check connection!");
         } finally {
-            btn.innerText = "LOAD DATA FROM EXCEL";
+            btn.innerText = "Load data";
             btn.disabled = false;
         }
     }
 
-    // ĐÃ NÂNG CẤP ĐỂ TƯƠNG THÍCH VỚI BACKEND MỚI
     async function sendData() {
         const btn = document.getElementById('btnSend');
         const dateVal = document.getElementById('sale-date').value;
         
-        if (!dateVal) return alert("Please select a date!");
-        if (SCRIPT_URL === "YOUR_GOOGLE_SCRIPT_URL_HERE") return alert("Please add your Google Script URL to the code.");
+        if (!dateVal) return showToast("Please select a date!");
+        if (SCRIPT_URL === "YOUR_GOOGLE_SCRIPT_URL_HERE") return showToast("Script URL is missing!");
 
         const payload = {
-            action: "write", // Khai báo hành động ghi dữ liệu
+            action: "write",
             date: formatDate(dateVal),
             drinks: sales,
             costs: {
@@ -307,17 +339,17 @@
             const result = await response.json();
 
             if(result.success) {
-                alert(`Successfully synced data for ${payload.date}!`);
+                showToast("Synced successfully!");
                 localStorage.removeItem('khoCoffeeBackup');
                 menuData.forEach(item => sales[item.id] = 0);
                 document.querySelectorAll('input[type="number"], input[type="text"]').forEach(el => el.value = "");
                 renderMenu();
             } else {
-                alert(result.message);
+                showToast(result.message);
             }
             
         } catch (error) {
-            alert("Connection error: " + error.message);
+            showToast("Connection error!");
         } finally {
             btn.innerText = "SYNC TO EXCEL";
             btn.disabled = false;
