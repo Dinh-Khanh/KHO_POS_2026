@@ -3,16 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Khờ Coffee POS</title>
+    <title>Khờ Coffee POS & Invoice</title>
     <meta name="apple-mobile-web-app-title" content="Khờ POS">
     <meta name="application-name" content="Khờ POS">
     
     <link rel="icon" type="image/png" href="https://img.icons8.com/ios-filled/512/000000/cafe.png">
-    <link rel="apple-touch-icon" href="https://img.icons8.com/ios-filled/512/000000/cafe.png">
+    <link class="apple-touch-icon" href="https://img.icons8.com/ios-filled/512/000000/cafe.png">
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght=800;900&display=swap" rel="stylesheet">
+
+    <!-- html2canvas Library for capturing element as an image -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <style>
         :root {
@@ -24,6 +27,8 @@
             --highlight: #000000;
             --highlight-text: #ffffff;
             --control-active: #e0e0e0;
+            --danger: #d9534f;
+            --success: #5cb85c;
         }
 
         body { font-family: Arial, Helvetica, sans-serif; background-color: var(--bg-color); color: var(--text-main); margin: 0; padding: 0; padding-bottom: 90px; -webkit-tap-highlight-color: transparent; }
@@ -36,12 +41,11 @@
         .card { background: var(--card-bg); border-radius: 8px; padding: 24px; margin-bottom: 20px; border: 1px solid var(--border-color); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .card-title { font-family: 'Montserrat', sans-serif; font-size: 1.1rem; font-weight: 800; color: var(--text-main); text-transform: uppercase; margin-top: 0; border-bottom: 3px solid var(--text-main); padding-bottom: 12px; margin-bottom: 20px; letter-spacing: 1px; }
         
-        input[type="date"], input[type="number"], input[type="text"] { width: 100%; padding: 14px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 1rem; box-sizing: border-box; background-color: var(--card-bg); color: var(--text-main); outline: none; transition: 0.2s; font-family: Arial, Helvetica, sans-serif; font-weight: bold; }
+        input[type="date"], input[type="number"], input[type="text"], input[type="month"] { width: 100%; padding: 14px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 1rem; box-sizing: border-box; background-color: var(--card-bg); color: var(--text-main); outline: none; transition: 0.2s; font-family: Arial, Helvetica, sans-serif; font-weight: bold; }
         input:focus { border-color: var(--text-main); box-shadow: 0 0 0 2px rgba(0,0,0,0.1); }
         input::placeholder { color: var(--text-muted); font-weight: normal; }
         label { display: block; font-size: 0.85rem; font-weight: bold; color: var(--text-main); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;}
 
-        /* Ngày tháng hiển thị dạng chữ thường tự nhiên */
         .date-display { font-family: 'Montserrat', sans-serif; font-size: 1.1rem; font-weight: 500; color: var(--text-main); text-align: center; margin-top: 15px; margin-bottom: 15px; text-transform: none; }
 
         .menu-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--border-color); }
@@ -60,15 +64,29 @@
         .cost-item label { margin-bottom: auto; padding-bottom: 8px; }
         .cost-item input { margin-bottom: 0; }
 
+        .customer-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--border-color); }
+        .customer-left { display: flex; align-items: center; gap: 10px; font-weight: bold; font-size: 1rem; cursor: pointer; }
+        .customer-left input[type="checkbox"] { width: 20px; height: 20px; cursor: pointer; accent-color: var(--text-main); }
+        .customer-actions { display: flex; gap: 8px; }
+        .btn-sm { padding: 6px 10px; border-radius: 4px; border: 1px solid var(--text-main); font-size: 0.8rem; font-weight: bold; cursor: pointer; background: transparent; }
+        .btn-danger { color: var(--danger); border-color: var(--danger); }
+        
+        .customer-input-group { display: flex; gap: 8px; margin-bottom: 15px; }
+        .customer-input-group input { padding: 10px; }
+
+        /* Invoice container for export */
+        #invoice-capture-area { padding: 15px; background: #ffffff; border-radius: 6px; }
+        .invoice-header-title { font-family: 'Montserrat', sans-serif; font-size: 1.2rem; font-weight: 900; text-align: center; text-transform: uppercase; margin-bottom: 15px; border-bottom: 2px solid #000; padding-bottom: 5px; }
+        .invoice-item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border-color); font-weight: bold; }
+        .invoice-total { font-size: 1.2rem; text-align: right; margin-top: 15px; padding-top: 10px; border-top: 2px solid var(--text-main); font-family: 'Montserrat', sans-serif; font-weight: 900; }
+
         .footer { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--card-bg); padding: 16px; box-sizing: border-box; border-top: 2px solid var(--text-main); z-index: 20; }
         .btn-submit { font-family: 'Montserrat', sans-serif; width: 100%; max-width: 600px; margin: 0 auto; display: block; background-color: var(--highlight); color: var(--highlight-text); padding: 18px; border: none; border-radius: 4px; font-size: 1.1rem; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; transition: 0.2s; cursor: pointer; }
         .btn-submit:active { transform: scale(0.98); background-color: #333333; }
         
-        /* Nút Tải Dữ Liệu (Không in hoa, gọn gàng) */
-        .btn-load { font-family: 'Montserrat', sans-serif; width: 100%; background-color: transparent; border: 2px solid var(--text-main); color: var(--text-main); padding: 12px; border-radius: 4px; font-size: 1rem; font-weight: 800; cursor: pointer; transition: 0.2s; text-transform: none; }
+        .btn-load { font-family: 'Montserrat', sans-serif; width: 100%; background-color: transparent; border: 2px solid var(--text-main); color: var(--text-main); padding: 12px; border-radius: 4px; font-size: 1rem; font-weight: 800; cursor: pointer; transition: 0.2s; text-transform: none; margin-bottom: 10px; }
         .btn-load:active { background-color: var(--control-active); }
 
-        /* Giao diện Thông Báo Nhỏ (Toast) */
         #toast {
             visibility: hidden;
             min-width: 220px;
@@ -91,7 +109,7 @@
         #toast.show {
             visibility: visible;
             opacity: 1;
-            bottom: 100px; /* Đẩy cao lên để không bị che bởi nút Sync */
+            bottom: 100px;
         }
     </style>
 </head>
@@ -102,6 +120,7 @@
 </div>
 
 <div class="container">
+    <!-- DATE OF RECORD CARD -->
     <div class="card">
         <h2 class="card-title">Date of Record</h2>
         <input type="date" id="sale-date" onchange="handleDateChange()" style="margin-bottom: 0;">
@@ -109,11 +128,24 @@
         <button class="btn-load" id="btnLoad" onclick="fetchData()">LOAD DATA</button>
     </div>
 
+    <!-- DRINKS SOLD CARD -->
     <div class="card">
         <h2 class="card-title">Drinks Sold</h2>
         <div id="menu-list"></div>
     </div>
 
+    <!-- DAILY CUSTOMER DEBTS CARD -->
+    <div class="card">
+        <h2 class="card-title">Daily Customers (Debts)</h2>
+        <div class="customer-input-group">
+            <input type="text" id="new-cust-name" placeholder="Name (e.g. A Hung)">
+            <input type="number" id="new-cust-price" placeholder="Price (K)" style="width: 120px;">
+            <button class="btn-sm" onclick="addCustomer()" style="background: var(--text-main); color: var(--card-bg); min-width: 60px;">Add</button>
+        </div>
+        <div id="customer-list"></div>
+    </div>
+
+    <!-- MATERIAL COSTS CARD -->
     <div class="card">
         <h2 class="card-title">Material Costs ($)</h2>
         <div class="cost-grid">
@@ -136,6 +168,29 @@
         </div>
     </div>
 
+    <!-- MONTHLY INVOICE EXPORT & CAPTURE -->
+    <div class="card">
+        <h2 class="card-title">Export Monthly Invoice</h2>
+        <div class="customer-input-group" style="margin-bottom: 15px;">
+            <input type="month" id="invoice-month">
+            <button class="btn-load" id="btnInvoice" onclick="fetchMonthlyInvoices()" style="margin-bottom:0; width: auto; padding: 0 15px; white-space: nowrap;">Get Invoice</button>
+        </div>
+        
+        <!-- Capture Area Container -->
+        <div id="invoice-container-box" style="display: none;">
+            <div id="invoice-capture-area">
+                <div class="invoice-header-title" id="invoice-title-text">MONTHLY DEBT STATEMENT</div>
+                <div id="invoice-report-list"></div>
+            </div>
+            <button class="btn-load" onclick="exportInvoiceToImage()" style="margin-top: 15px; background-color: #000; color: #fff; border: none;">📸 EXPORT IMAGE FILE</button>
+        </div>
+        
+        <div id="invoice-empty-placeholder">
+            <p style="color: var(--text-muted); font-size: 0.9rem; text-align: center; margin: 0;">Select a month and click "Get Invoice" to calculate.</p>
+        </div>
+    </div>
+
+    <!-- DAILY NOTES CARD -->
     <div class="card">
         <h2 class="card-title">Daily Notes</h2>
         <input type="text" id="note" placeholder="e.g., Weekend, heavy rain, etc." oninput="saveLocalState()" style="margin-bottom:0;">
@@ -149,7 +204,7 @@
 <div id="toast"></div>
 
 <script>
-    // PASTE YOUR GOOGLE SCRIPT URL HERE
+    // REPLACE THIS WITH YOUR DEPLOYED GOOGLE APPS SCRIPT WEB APP URL
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwusW-aXDoL4gyuywmnZxeTsPHswvKenOY4uC0GhityagFJdIyFwxmM5eeJjTg-HX6gLw/exec";
 
     const menuData = [
@@ -162,42 +217,139 @@
         { id: "combo_m", name: "Combo (Machine)", price: "$15" }
     ];
 
+    let customers = [
+        { name: "Nhân", defaultPrice: 12 },
+        { name: "Đại", defaultPrice: 15 },
+        { name: "A Hưng", defaultPrice: 15 },
+        { name: "A Bắc", defaultPrice: 15 },
+        { name: "Tài", defaultPrice: 15 },
+        { name: "C Hoà", defaultPrice: 15 }
+    ];
+
     let sales = {};
     menuData.forEach(item => sales[item.id] = 0);
+    let selectedCustomers = []; 
 
-    // --- HỆ THỐNG THÔNG BÁO NHỎ (TOAST) ---
     let toastTimeout;
     function showToast(message) {
         const toast = document.getElementById("toast");
         toast.innerText = message;
         toast.classList.add("show");
-        
-        // Reset thời gian tắt nếu người dùng bấm nhiều lần
         clearTimeout(toastTimeout);
         toastTimeout = setTimeout(() => {
             toast.classList.remove("show");
-        }, 3000); // 3 giây sẽ tự mờ đi
+        }, 3000);
     }
 
-    // --- CÁC TÁC VỤ ỨNG DỤNG ---
     function handleDateChange() {
+        selectedCustomers = []; 
         saveLocalState();
         updateDateDisplay();
+        renderCustomers();
     }
 
     function updateDateDisplay() {
         const dateInput = document.getElementById('sale-date').value;
         if (!dateInput) return;
-        
         const d = new Date(dateInput);
         const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
         document.getElementById('formatted-date').innerText = d.toLocaleDateString('en-US', options);
+    }
+
+    function loadCustomers() {
+        const savedCust = localStorage.getItem('khoCoffeeCustomers');
+        if (savedCust) customers = JSON.parse(savedCust);
+    }
+
+    function saveCustomers() {
+        localStorage.setItem('khoCoffeeCustomers', JSON.stringify(customers));
+        renderCustomers();
+    }
+
+    function addCustomer() {
+        const nameInput = document.getElementById('new-cust-name');
+        const priceInput = document.getElementById('new-cust-price');
+        const name = nameInput.value.trim();
+        const price = parseInt(priceInput.value);
+
+        if (!name || isNaN(price)) return showToast("Please input both Name and Price!");
+        if (customers.some(c => c.name.toLowerCase() === name.toLowerCase())) return showToast("Customer already exists!");
+
+        customers.push({ name: name, defaultPrice: price });
+        nameInput.value = ""; priceInput.value = "";
+        saveCustomers();
+        showToast("Customer added successfully!");
+    }
+
+    function editCustomer(index) {
+        const current = customers[index];
+        const newName = prompt("Edit customer name:", current.name);
+        if (newName === null) return;
+        const newPrice = prompt("Edit default price (K):", current.defaultPrice);
+        if (newPrice === null) return;
+
+        if (newName.trim() && !isNaN(parseInt(newPrice))) {
+            customers[index] = { name: newName.trim(), defaultPrice: parseInt(newPrice) };
+            saveCustomers();
+            showToast("Customer details updated!");
+        } else {
+            showToast("Invalid inputs entered!");
+        }
+    }
+
+    function deleteCustomer(index) {
+        if (confirm(`Are you sure you want to delete ${customers[index].name}?`)) {
+            selectedCustomers = selectedCustomers.filter(name => name !== customers[index].name);
+            customers.splice(index, 1);
+            saveCustomers();
+            saveLocalState();
+            showToast("Customer deleted!");
+        }
+    }
+
+    function toggleCustomerSelect(name) {
+        if (selectedCustomers.includes(name)) {
+            selectedCustomers = selectedCustomers.filter(c => c !== name);
+        } else {
+            selectedCustomers.push(name);
+        }
+        saveLocalState();
+    }
+
+    function renderCustomers() {
+        let html = "";
+        customers.forEach((cust, index) => {
+            const isChecked = selectedCustomers.includes(cust.name) ? "checked" : "";
+            html += `
+            <div class="customer-row">
+                <label class="customer-left">
+                    <input type="checkbox" ${isChecked} onchange="toggleCustomerSelect('${cust.name}')">
+                    <span>${cust.name} (${cust.defaultPrice}K)</span>
+                </label>
+                <div class="customer-actions">
+                    <button class="btn-sm" onclick="editCustomer(${index})">Edit</button>
+                    <button class="btn-sm btn-danger" onclick="deleteCustomer(${index})">Delete</button>
+                </div>
+            </div>`;
+        });
+        document.getElementById('customer-list').innerHTML = html || "<p style='color:var(--text-muted); font-size:0.9rem; text-align:center;'>No customers defined.</p>";
+    }
+
+    function generateProfitNote() {
+        let parts = [];
+        customers.forEach(c => {
+            if (selectedCustomers.includes(c.name)) {
+                parts.push(`${c.name} ${c.defaultPrice}K`);
+            }
+        });
+        return parts.join(", ");
     }
 
     function saveLocalState() {
         const state = {
             date: document.getElementById('sale-date').value,
             sales: sales,
+            selectedCustomers: selectedCustomers,
             costs: {
                 coffee: document.getElementById('cost-coffee').value,
                 fresh_milk: document.getElementById('cost-fresh_milk').value,
@@ -210,11 +362,13 @@
     }
 
     function loadLocalState() {
+        loadCustomers();
         const saved = localStorage.getItem('khoCoffeeBackup');
         if (saved) {
             const state = JSON.parse(saved);
             if (state.date) document.getElementById('sale-date').value = state.date;
             if (state.sales) sales = state.sales;
+            if (state.selectedCustomers) selectedCustomers = state.selectedCustomers;
             if (state.costs) {
                 document.getElementById('cost-coffee').value = state.costs.coffee || '';
                 document.getElementById('cost-fresh_milk').value = state.costs.fresh_milk || '';
@@ -225,10 +379,11 @@
         } else {
             const today = new Date();
             const offset = today.getTimezoneOffset() * 60000;
-            const localISOTime = (new Date(today - offset)).toISOString().split('T')[0];
-            document.getElementById('sale-date').value = localISOTime;
+            document.getElementById('sale-date').value = (new Date(today - offset)).toISOString().split('T')[0];
         }
+        document.getElementById('invoice-month').value = document.getElementById('sale-date').value.substring(0, 7);
         updateDateDisplay();
+        renderCustomers();
     }
 
     function renderMenu() {
@@ -267,50 +422,44 @@
     async function fetchData() {
         const dateVal = document.getElementById('sale-date').value;
         if (!dateVal) return showToast("Please select a date!");
-        
         const btn = document.getElementById('btnLoad');
-        btn.innerText = "Loading...";
-        btn.disabled = true;
-
-        const payload = { action: "read", date: formatDate(dateVal) };
+        btn.innerText = "Loading..."; btn.disabled = true;
 
         try {
             const response = await fetch(SCRIPT_URL, {
                 method: 'POST',
-                body: JSON.stringify(payload),
+                body: JSON.stringify({ action: "read", date: formatDate(dateVal) }),
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' }
             });
-            
             const result = await response.json();
-            
             if (result.success) {
                 sales = result.drinks;
                 document.getElementById('cost-coffee').value = result.costs.coffee;
                 document.getElementById('cost-fresh_milk').value = result.costs.fresh_milk;
                 document.getElementById('cost-condensed_milk').value = result.costs.condensed_milk;
                 document.getElementById('cost-plastic_cup').value = result.costs.plastic_cup;
-                document.getElementById('note').value = result.note;
-                
-                renderMenu();
-                saveLocalState();
+                document.getElementById('note').value = result.note || "";
+                renderMenu(); saveLocalState(); renderCustomers();
                 showToast("Data loaded successfully!");
             } else {
                 showToast(result.message);
             }
         } catch (error) {
-            showToast("Error loading data. Check connection!");
-        } finally {
-            btn.innerText = "Load data";
-            btn.disabled = false;
+            showToast("Error loading data from sheet!");
+        } finally { 
+            btn.innerText = "Load data"; 
+            btn.disabled = false; 
         }
     }
 
     async function sendData() {
         const btn = document.getElementById('btnSend');
         const dateVal = document.getElementById('sale-date').value;
-        
         if (!dateVal) return showToast("Please select a date!");
-        if (SCRIPT_URL === "YOUR_GOOGLE_SCRIPT_URL_HERE") return showToast("Script URL is missing!");
+
+        const customerDebtString = generateProfitNote();
+        const dailyNoteInput = document.getElementById('note').value.trim();
+        let finalNoteContent = (customerDebtString && dailyNoteInput) ? `${customerDebtString} | ${dailyNoteInput}` : (customerDebtString || dailyNoteInput);
 
         const payload = {
             action: "write",
@@ -322,12 +471,10 @@
                 condensed_milk: document.getElementById('cost-condensed_milk').value,
                 plastic_cup: document.getElementById('cost-plastic_cup').value
             },
-            note: document.getElementById('note').value
+            note: finalNoteContent
         };
 
-        btn.innerText = "PROCESSING...";
-        btn.disabled = true;
-        btn.style.opacity = "0.7";
+        btn.innerText = "PROCESSING..."; btn.disabled = true;
 
         try {
             const response = await fetch(SCRIPT_URL, {
@@ -335,26 +482,131 @@
                 body: JSON.stringify(payload),
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' }
             });
-            
             const result = await response.json();
-
             if(result.success) {
                 showToast("Synced successfully!");
                 localStorage.removeItem('khoCoffeeBackup');
+                selectedCustomers = [];
                 menuData.forEach(item => sales[item.id] = 0);
                 document.querySelectorAll('input[type="number"], input[type="text"]').forEach(el => el.value = "");
-                renderMenu();
+                renderMenu(); renderCustomers();
             } else {
                 showToast(result.message);
             }
-            
         } catch (error) {
-            showToast("Connection error!");
+            showToast("Connection error occurred!");
         } finally {
-            btn.innerText = "SYNC TO EXCEL";
-            btn.disabled = false;
-            btn.style.opacity = "1";
+            btn.innerText = "SYNC TO EXCEL"; btn.disabled = false;
         }
+    }
+
+    async function fetchMonthlyInvoices() {
+        const monthVal = document.getElementById('invoice-month').value; 
+        if (!monthVal) return showToast("Please select a month!");
+
+        const btn = document.getElementById('btnInvoice');
+        btn.innerText = "Calculating..."; btn.disabled = true;
+
+        const [year, month] = monthVal.split("-");
+        document.getElementById('invoice-title-text').innerText = `MONTHLY DEBT STATEMENT (${month}/${year})`;
+
+        try {
+            const response = await fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: "read_month", month: `${month}/${year}` }),
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+            });
+            const result = await response.json();
+            if (result.success && result.data) {
+                calculateAndRenderInvoices(result.data);
+            } else {
+                showToast("No data recorded for this month!");
+                hideInvoiceBox();
+            }
+        } catch (e) {
+            showToast("Running in offline mock mode...");
+            calculateAndRenderInvoices([
+                "Nhân 12K, Đại 15K",
+                "Nhân 12K, Đại 15K, A Hưng 15K, A Bắc 15K | Heavy Rain",
+                "Nhân 12K, Đại 15K, A. Bắc 15K",
+                "Nhân 12K, Tài 15K"
+            ]);
+        } finally {
+            btn.innerText = "Get Invoice"; btn.disabled = false;
+        }
+    }
+
+    function calculateAndRenderInvoices(dataRows) {
+        let summary = {};
+        customers.forEach(c => summary[c.name] = 0);
+
+        dataRows.forEach(rowStr => {
+            if (!rowStr || typeof rowStr !== 'string') return;
+            const cleanStr = rowStr.split("|")[0];
+            const parts = cleanStr.split(",");
+            
+            parts.forEach(part => {
+                let text = part.trim();
+                if (!text) return;
+
+                customers.forEach(c => {
+                    let normalizedText = text.replace(/\./g, "").toLowerCase();
+                    let normalizedCustName = c.name.replace(/\./g, "").toLowerCase();
+                    if (normalizedText.includes(normalizedCustName)) {
+                        let numMatch = text.match(/\d+/);
+                        if (numMatch) summary[c.name] += parseInt(numMatch[0]) * 1000;
+                    }
+                });
+            });
+        });
+
+        let html = "";
+        let totalMonthAll = 0;
+        for (let name in summary) {
+            if (summary[name] > 0) {
+                totalMonthAll += summary[name];
+                html += `<div class="invoice-item"><span>${name}</span><span style="color: var(--danger);">${summary[name].toLocaleString('vi-VN')} VND</span></div>`;
+            }
+        }
+
+        if (html === "") {
+            showToast("No debts found for this month!");
+            hideInvoiceBox();
+        } else {
+            html += `<div class="invoice-total">TOTAL DEBT: <span style="color:var(--success);">${totalMonthAll.toLocaleString('vi-VN')} VND</span></div>`;
+            document.getElementById('invoice-report-list').innerHTML = html;
+            
+            document.getElementById('invoice-container-box').style.display = "block";
+            document.getElementById('invoice-empty-placeholder').style.display = "none";
+        }
+    }
+
+    function hideInvoiceBox() {
+        document.getElementById('invoice-container-box').style.display = "none";
+        document.getElementById('invoice-empty-placeholder').style.display = "block";
+    }
+
+    function exportInvoiceToImage() {
+        const target = document.getElementById("invoice-capture-area");
+        showToast("Generating image file, please wait...");
+
+        // Higher scale for better definition
+        html2canvas(target, { scale: 2, useCORS: true, backgroundColor: "#ffffff" }).then(canvas => {
+            const imageURI = canvas.toDataURL("image/png");
+            const monthVal = document.getElementById('invoice-month').value;
+            
+            const downloadLink = document.createElement("a");
+            downloadLink.href = imageURI;
+            downloadLink.download = `Invoice_KhoCoffee_${monthVal}.png`;
+            
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+            
+            showToast("Image saved successfully! 🎉");
+        }).catch(err => {
+            showToast("Failed to generate image. Please take a manual screenshot.");
+        });
     }
 
     loadLocalState();
