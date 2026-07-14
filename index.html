@@ -14,7 +14,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght=800;900&display=swap" rel="stylesheet">
 
-    <!-- html2canvas Library for capturing element as an image -->
+    <!-- html2canvas Library for capturing elements -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <style>
@@ -41,8 +41,8 @@
         .card { background: var(--card-bg); border-radius: 8px; padding: 24px; margin-bottom: 20px; border: 1px solid var(--border-color); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .card-title { font-family: 'Montserrat', sans-serif; font-size: 1.1rem; font-weight: 800; color: var(--text-main); text-transform: uppercase; margin-top: 0; border-bottom: 3px solid var(--text-main); padding-bottom: 12px; margin-bottom: 20px; letter-spacing: 1px; }
         
-        input[type="date"], input[type="number"], input[type="text"], input[type="month"] { width: 100%; padding: 14px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 1rem; box-sizing: border-box; background-color: var(--card-bg); color: var(--text-main); outline: none; transition: 0.2s; font-family: Arial, Helvetica, sans-serif; font-weight: bold; }
-        input:focus { border-color: var(--text-main); box-shadow: 0 0 0 2px rgba(0,0,0,0.1); }
+        input[type="date"], input[type="number"], input[type="text"], select { width: 100%; padding: 14px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 1rem; box-sizing: border-box; background-color: var(--card-bg); color: var(--text-main); outline: none; transition: 0.2s; font-family: Arial, Helvetica, sans-serif; font-weight: bold; }
+        input:focus, select:focus { border-color: var(--text-main); box-shadow: 0 0 0 2px rgba(0,0,0,0.1); }
         input::placeholder { color: var(--text-muted); font-weight: normal; }
         label { display: block; font-size: 0.85rem; font-weight: bold; color: var(--text-main); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;}
 
@@ -74,11 +74,16 @@
         .customer-input-group { display: flex; gap: 8px; margin-bottom: 15px; }
         .customer-input-group input { padding: 10px; }
 
-        /* Invoice container for export */
-        #invoice-capture-area { padding: 15px; background: #ffffff; border-radius: 6px; }
-        .invoice-header-title { font-family: 'Montserrat', sans-serif; font-size: 1.2rem; font-weight: 900; text-align: center; text-transform: uppercase; margin-bottom: 15px; border-bottom: 2px solid #000; padding-bottom: 5px; }
-        .invoice-item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border-color); font-weight: bold; }
-        .invoice-total { font-size: 1.2rem; text-align: right; margin-top: 15px; padding-top: 10px; border-top: 2px solid var(--text-main); font-family: 'Montserrat', sans-serif; font-weight: 900; }
+        /* Invoice styling for download */
+        #invoice-capture-area { padding: 25px; background: #ffffff; border-radius: 12px; border: 2px solid #000; box-shadow: 0 4px 10px rgba(0,0,0,0.08); text-align: center; }
+        .invoice-brand { font-family: 'Montserrat', sans-serif; font-size: 1.6rem; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 5px; }
+        .invoice-subtitle { font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px; }
+        .invoice-details-box { border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 15px 0; margin-bottom: 20px; text-align: left; }
+        .invoice-item { display: flex; justify-content: space-between; padding: 8px 0; font-size: 0.95rem; font-weight: bold; }
+        .invoice-total { font-size: 1.25rem; text-align: right; margin-top: 10px; padding-top: 10px; border-top: 2px solid #000; font-family: 'Montserrat', sans-serif; font-weight: 900; }
+        .qr-section { margin-top: 25px; border-top: 1px dashed #cccccc; padding-top: 20px; display: flex; flex-direction: column; align-items: center; }
+        .qr-section p { font-size: 0.8rem; font-weight: bold; color: var(--text-muted); margin-top: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .qr-image { width: 220px; height: 220px; border: 1px solid var(--border-color); border-radius: 8px; padding: 5px; background: #fff; }
 
         .footer { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--card-bg); padding: 16px; box-sizing: border-box; border-top: 2px solid var(--text-main); z-index: 20; }
         .btn-submit { font-family: 'Montserrat', sans-serif; width: 100%; max-width: 600px; margin: 0 auto; display: block; background-color: var(--highlight); color: var(--highlight-text); padding: 18px; border: none; border-radius: 4px; font-size: 1.1rem; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; transition: 0.2s; cursor: pointer; }
@@ -168,25 +173,63 @@
         </div>
     </div>
 
-    <!-- MONTHLY INVOICE EXPORT & CAPTURE -->
+    <!-- CUSTOM INTERVAL INVOICE GENERATOR -->
     <div class="card">
-        <h2 class="card-title">Export Monthly Invoice</h2>
-        <div class="customer-input-group" style="margin-bottom: 15px;">
-            <input type="month" id="invoice-month">
-            <button class="btn-load" id="btnInvoice" onclick="fetchMonthlyInvoices()" style="margin-bottom:0; width: auto; padding: 0 15px; white-space: nowrap;">Get Invoice</button>
+        <h2 class="card-title">Generate Invoice Statement</h2>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+            <div>
+                <label style="font-size: 0.75rem;">From Date</label>
+                <input type="date" id="invoice-start">
+            </div>
+            <div>
+                <label style="font-size: 0.75rem;">To Date</label>
+                <input type="date" id="invoice-end">
+            </div>
         </div>
         
-        <!-- Capture Area Container -->
-        <div id="invoice-container-box" style="display: none;">
+        <div style="margin-bottom: 20px;">
+            <label>Select Customer</label>
+            <select id="invoice-customer-select">
+                <!-- Will be dynamically populated with customer list -->
+            </select>
+        </div>
+        
+        <button class="btn-load" id="btnInvoice" onclick="fetchRangeInvoices()" style="background-color: var(--text-main); color: var(--card-bg);">GENERATE INVOICE</button>
+        
+        <!-- Generated Receipt Box (For Capture) -->
+        <div id="invoice-container-box" style="display: none; margin-top: 25px;">
             <div id="invoice-capture-area">
-                <div class="invoice-header-title" id="invoice-title-text">MONTHLY DEBT STATEMENT</div>
-                <div id="invoice-report-list"></div>
+                <div class="invoice-brand">Khờ Coffee</div>
+                <div class="invoice-subtitle" id="invoice-bill-title">Debt Bill</div>
+                
+                <div class="invoice-details-box">
+                    <div style="font-size: 0.9rem; margin-bottom: 10px;">
+                        <strong>Customer:</strong> <span id="bill-cust-name" style="text-transform: uppercase;"></span>
+                    </div>
+                    <div style="font-size: 0.8rem; margin-bottom: 15px; color: var(--text-muted);">
+                        <strong>Period:</strong> <span id="bill-period"></span>
+                    </div>
+                    
+                    <div id="invoice-report-list">
+                        <!-- Individual drink days rendered here -->
+                    </div>
+                </div>
+
+                <!-- VietQR Auto-Generator Section -->
+                <div class="qr-section">
+                    <img id="vietqr-img" class="qr-image" src="" alt="Payment QR Code">
+                    <p>Scan with Mobile Banking to Pay</p>
+                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">
+                        LE DINH KHANH - OCB - 0004100022246002
+                    </div>
+                </div>
             </div>
+            
             <button class="btn-load" onclick="exportInvoiceToImage()" style="margin-top: 15px; background-color: #000; color: #fff; border: none;">📸 EXPORT IMAGE FILE</button>
         </div>
         
         <div id="invoice-empty-placeholder">
-            <p style="color: var(--text-muted); font-size: 0.9rem; text-align: center; margin: 0;">Select a month and click "Get Invoice" to calculate.</p>
+            <p style="color: var(--text-muted); font-size: 0.9rem; text-align: center; margin: 0;">Fill criteria and click "Generate Invoice" above.</p>
         </div>
     </div>
 
@@ -204,7 +247,7 @@
 <div id="toast"></div>
 
 <script>
-    // REPLACE THIS WITH YOUR DEPLOYED GOOGLE APPS SCRIPT WEB APP URL
+    // --- CHÚ Ý: THAY ĐƯỜNG DẪN WEB APP APPS SCRIPT CỦA BẠN VÀO ĐÂY ---
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwusW-aXDoL4gyuywmnZxeTsPHswvKenOY4uC0GhityagFJdIyFwxmM5eeJjTg-HX6gLw/exec";
 
     const menuData = [
@@ -259,11 +302,24 @@
     function loadCustomers() {
         const savedCust = localStorage.getItem('khoCoffeeCustomers');
         if (savedCust) customers = JSON.parse(savedCust);
+        populateInvoiceCustomerDropdown();
+    }
+
+    function populateInvoiceCustomerDropdown() {
+        const select = document.getElementById("invoice-customer-select");
+        select.innerHTML = "";
+        customers.forEach(c => {
+            const opt = document.createElement("option");
+            opt.value = c.name;
+            opt.innerText = c.name;
+            select.appendChild(opt);
+        });
     }
 
     function saveCustomers() {
         localStorage.setItem('khoCoffeeCustomers', JSON.stringify(customers));
         renderCustomers();
+        populateInvoiceCustomerDropdown();
     }
 
     function addCustomer() {
@@ -381,7 +437,16 @@
             const offset = today.getTimezoneOffset() * 60000;
             document.getElementById('sale-date').value = (new Date(today - offset)).toISOString().split('T')[0];
         }
-        document.getElementById('invoice-month').value = document.getElementById('sale-date').value.substring(0, 7);
+        
+        // Default range selection: Start of current month to today
+        const currDateObj = new Date(document.getElementById('sale-date').value);
+        const y = currDateObj.getFullYear();
+        const m = currDateObj.getMonth();
+        const formattedStart = `${y}-${("0" + (m+1)).slice(-2)}-01`;
+        
+        document.getElementById('invoice-start').value = formattedStart;
+        document.getElementById('invoice-end').value = document.getElementById('sale-date').value;
+
         updateDateDisplay();
         renderCustomers();
     }
@@ -500,85 +565,86 @@
         }
     }
 
-    async function fetchMonthlyInvoices() {
-        const monthVal = document.getElementById('invoice-month').value; 
-        if (!monthVal) return showToast("Please select a month!");
+    // --- XUẤT HÓA ĐƠN THEO KHOẢNG NGÀY & KHÁCH HÀNG ---
+    async function fetchRangeInvoices() {
+        const startDate = document.getElementById('invoice-start').value;
+        const endDate = document.getElementById('invoice-end').value;
+        const customerName = document.getElementById('invoice-customer-select').value;
+
+        if (!startDate || !endDate) return showToast("Please select both dates!");
+        if (!customerName) return showToast("Please select a customer!");
 
         const btn = document.getElementById('btnInvoice');
-        btn.innerText = "Calculating..."; btn.disabled = true;
-
-        const [year, month] = monthVal.split("-");
-        document.getElementById('invoice-title-text').innerText = `MONTHLY DEBT STATEMENT (${month}/${year})`;
+        btn.innerText = "Searching..."; btn.disabled = true;
 
         try {
             const response = await fetch(SCRIPT_URL, {
                 method: 'POST',
-                body: JSON.stringify({ action: "read_month", month: `${month}/${year}` }),
+                body: JSON.stringify({ 
+                    action: "read_range", 
+                    startDate: startDate, 
+                    endDate: endDate, 
+                    customerName: customerName 
+                }),
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' }
             });
             const result = await response.json();
-            if (result.success && result.data) {
-                calculateAndRenderInvoices(result.data);
+            if (result.success && result.data && result.data.length > 0) {
+                renderInvoiceBox(customerName, startDate, endDate, result.data);
             } else {
-                showToast("No data recorded for this month!");
+                showToast(`No nợ records found for ${customerName} within selected period.`);
                 hideInvoiceBox();
             }
         } catch (e) {
-            showToast("Running in offline mock mode...");
-            calculateAndRenderInvoices([
-                "Nhân 12K, Đại 15K",
-                "Nhân 12K, Đại 15K, A Hưng 15K, A Bắc 15K | Heavy Rain",
-                "Nhân 12K, Đại 15K, A. Bắc 15K",
-                "Nhân 12K, Tài 15K"
+            showToast("Offline simulation mode active...");
+            renderInvoiceBox(customerName, startDate, endDate, [
+                { date: "01/07/2026", amount: 15000 },
+                { date: "05/07/2026", amount: 12000 },
+                { date: "12/07/2026", amount: 15000 }
             ]);
         } finally {
-            btn.innerText = "Get Invoice"; btn.disabled = false;
+            btn.innerText = "GENERATE INVOICE"; btn.disabled = false;
         }
     }
 
-    function calculateAndRenderInvoices(dataRows) {
-        let summary = {};
-        customers.forEach(c => summary[c.name] = 0);
-
-        dataRows.forEach(rowStr => {
-            if (!rowStr || typeof rowStr !== 'string') return;
-            const cleanStr = rowStr.split("|")[0];
-            const parts = cleanStr.split(",");
-            
-            parts.forEach(part => {
-                let text = part.trim();
-                if (!text) return;
-
-                customers.forEach(c => {
-                    let normalizedText = text.replace(/\./g, "").toLowerCase();
-                    let normalizedCustName = c.name.replace(/\./g, "").toLowerCase();
-                    if (normalizedText.includes(normalizedCustName)) {
-                        let numMatch = text.match(/\d+/);
-                        if (numMatch) summary[c.name] += parseInt(numMatch[0]) * 1000;
-                    }
-                });
-            });
-        });
+    function renderInvoiceBox(customerName, start, end, records) {
+        document.getElementById('bill-cust-name').innerText = customerName;
+        
+        // Display period format: DD/MM/YYYY - DD/MM/YYYY
+        const d1 = start.split("-").reverse().join("/");
+        const d2 = end.split("-").reverse().join("/");
+        document.getElementById('bill-period').innerText = `${d1} - ${d2}`;
 
         let html = "";
-        let totalMonthAll = 0;
-        for (let name in summary) {
-            if (summary[name] > 0) {
-                totalMonthAll += summary[name];
-                html += `<div class="invoice-item"><span>${name}</span><span style="color: var(--danger);">${summary[name].toLocaleString('vi-VN')} VND</span></div>`;
-            }
-        }
+        let totalSum = 0;
 
-        if (html === "") {
-            showToast("No debts found for this month!");
-            hideInvoiceBox();
-        } else {
-            html += `<div class="invoice-total">TOTAL DEBT: <span style="color:var(--success);">${totalMonthAll.toLocaleString('vi-VN')} VND</span></div>`;
-            document.getElementById('invoice-report-list').innerHTML = html;
-            
-            document.getElementById('invoice-container-box').style.display = "block";
-            document.getElementById('invoice-empty-placeholder').style.display = "none";
-        }
+        records.forEach(r => {
+            totalSum += r.amount;
+            html += `<div class="invoice-item">
+                        <span>Day: ${r.date}</span>
+                        <span style="color: var(--danger);">${r.amount.toLocaleString('vi-VN')} VND</span>
+                     </div>`;
+        });
+
+        html += `<div class="invoice-total">TOTAL AMOUNT: <span style="color:var(--success);">${totalSum.toLocaleString('vi-VN')} VND</span></div>`;
+        document.getElementById('invoice-report-list').innerHTML = html;
+
+        // --- CƠ CHẾ SINH VIETQR ĐỘNG ---
+        // Thông tin tài khoản nhận tiền:
+        const BANK_ID = "OCB"; 
+        const ACCOUNT_NO = "0004100022246002";
+        const TEMPLATE = "qr_only"; // Chỉ lấy vùng QR chính cho thẩm mỹ
+        const DESCRIPTION = encodeURIComponent(`${customerName} thanh toan ca phe`);
+        
+        // Ghép API VietQR chuẩn
+        const qrUrl = `https://api.vietqr.io/image/${BANK_ID}-${ACCOUNT_NO}-${TEMPLATE}.png?amount=${totalSum}&addInfo=${DESCRIPTION}`;
+        
+        const imgElement = document.getElementById("vietqr-img");
+        imgElement.src = qrUrl;
+
+        // Hiển thị phần hóa đơn, ẩn gợi ý placeholder
+        document.getElementById('invoice-container-box').style.display = "block";
+        document.getElementById('invoice-empty-placeholder').style.display = "none";
     }
 
     function hideInvoiceBox() {
@@ -590,14 +656,13 @@
         const target = document.getElementById("invoice-capture-area");
         showToast("Generating image file, please wait...");
 
-        // Higher scale for better definition
         html2canvas(target, { scale: 2, useCORS: true, backgroundColor: "#ffffff" }).then(canvas => {
             const imageURI = canvas.toDataURL("image/png");
-            const monthVal = document.getElementById('invoice-month').value;
+            const customerName = document.getElementById('invoice-customer-select').value;
             
             const downloadLink = document.createElement("a");
             downloadLink.href = imageURI;
-            downloadLink.download = `Invoice_KhoCoffee_${monthVal}.png`;
+            downloadLink.download = `Invoice_KhoCoffee_${customerName}.png`;
             
             document.body.appendChild(downloadLink);
             downloadLink.click();
