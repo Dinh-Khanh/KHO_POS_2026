@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Khờ Coffee POS & Invoice</title>
-    <meta name="apple-mobile-web-app-title" content="Khờ POS">
-    <meta name="application-name" content="Khờ POS">
+    <title>DAYUP POS & Invoice</title>
+    <meta name="apple-mobile-web-app-title" content="DAYUP POS">
+    <meta name="application-name" content="DAYUP POS">
     
     <link rel="icon" type="image/png" href="https://img.icons8.com/ios-filled/512/000000/cafe.png">
     <link class="apple-touch-icon" href="https://img.icons8.com/ios-filled/512/000000/cafe.png">
@@ -74,7 +74,6 @@
         .customer-input-group { display: flex; gap: 8px; margin-bottom: 15px; }
         .customer-input-group input { padding: 10px; }
 
-        /* Sửa lỗi hiển thị tràn viền cho phần Chọn Ngày */
         .invoice-date-grid { 
             display: grid; 
             grid-template-columns: 1fr 1fr; 
@@ -88,20 +87,17 @@
             box-sizing: border-box;
         }
 
-        /* Invoice styling for download */
         #invoice-capture-area { padding: 25px; background: #ffffff; border-radius: 12px; border: 2px solid #000; box-shadow: 0 4px 10px rgba(0,0,0,0.08); text-align: center; }
         .invoice-brand { font-family: 'Montserrat', sans-serif; font-size: 1.6rem; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 5px; }
         .invoice-subtitle { font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px; }
         .invoice-details-box { border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 15px 0; margin-bottom: 20px; text-align: left; }
         
-        /* Hiển thị ngày và giá tiền cùng một hàng */
         .invoice-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; font-size: 0.85rem; font-weight: bold; gap: 10px; }
         .invoice-item span:first-child { text-align: left; word-break: keep-all; }
         .invoice-item span:last-child { text-align: right; white-space: nowrap; }
 
         .invoice-total { font-size: 1.25rem; text-align: right; margin-top: 10px; padding-top: 10px; border-top: 2px solid #000; font-family: 'Montserrat', sans-serif; font-weight: 900; }
         
-        /* Khu vực QR: Chữ "Scan with..." nằm trên đầu mã QR */
         .qr-section { margin-top: 25px; border-top: 1px dashed #cccccc; padding-top: 20px; display: flex; flex-direction: column; align-items: center; }
         .qr-section p { font-size: 0.8rem; font-weight: bold; color: var(--text-muted); margin-bottom: 12px; margin-top: 0; text-transform: uppercase; letter-spacing: 0.5px; }
         .qr-image { width: 220px; height: 220px; border: 1px solid var(--border-color); border-radius: 8px; padding: 5px; background: #fff; }
@@ -142,7 +138,7 @@
 <body>
 
 <div class="header">
-    <h1>Khờ Coffee</h1>
+    <h1>DAYUP</h1>
 </div>
 
 <div class="container">
@@ -219,7 +215,7 @@
         <!-- Generated Receipt Box (For Capture) -->
         <div id="invoice-container-box" style="display: none; margin-top: 25px;">
             <div id="invoice-capture-area">
-                <div class="invoice-brand">Khờ Coffee</div>
+                <div class="invoice-brand">DAYUP</div>
                 <div class="invoice-subtitle" id="invoice-bill-title">Debt Bill</div>
                 
                 <div class="invoice-details-box">
@@ -261,7 +257,7 @@
 <div id="toast"></div>
 
 <script>
-    // --- CHÚ Ý: THAY ĐƯỜNG DẪN WEB APP APPS SCRIPT CỦA BẠN VÀO ĐÂY ---
+    // --- NOTE: REPLACE YOUR GOOGLE APPS SCRIPT WEB APP URL HERE ---
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwusW-aXDoL4gyuywmnZxeTsPHswvKenOY4uC0GhityagFJdIyFwxmM5eeJjTg-HX6gLw/exec";
 
     const menuData = [
@@ -313,9 +309,13 @@
         document.getElementById('formatted-date').innerText = d.toLocaleDateString('en-US', options);
     }
 
+    // Migration logic from previous storage namespaces
     function loadCustomers() {
-        const savedCust = localStorage.getItem('khoCoffeeCustomers');
-        if (savedCust) customers = JSON.parse(savedCust);
+        const savedCust = localStorage.getItem('dayupCustomers') || localStorage.getItem('comateCustomers') || localStorage.getItem('khoCoffeeCustomers');
+        if (savedCust) {
+            customers = JSON.parse(savedCust);
+            localStorage.setItem('dayupCustomers', savedCust);
+        }
         populateInvoiceCustomerDropdown();
     }
 
@@ -331,7 +331,7 @@
     }
 
     function saveCustomers() {
-        localStorage.setItem('khoCoffeeCustomers', JSON.stringify(customers));
+        localStorage.setItem('dayupCustomers', JSON.stringify(customers));
         renderCustomers();
         populateInvoiceCustomerDropdown();
     }
@@ -428,12 +428,12 @@
             },
             note: document.getElementById('note').value
         };
-        localStorage.setItem('khoCoffeeBackup', JSON.stringify(state));
+        localStorage.setItem('dayupBackup', JSON.stringify(state));
     }
 
     function loadLocalState() {
         loadCustomers();
-        const saved = localStorage.getItem('khoCoffeeBackup');
+        const saved = localStorage.getItem('dayupBackup') || localStorage.getItem('comateBackup') || localStorage.getItem('khoCoffeeBackup');
         if (saved) {
             const state = JSON.parse(saved);
             if (state.date) document.getElementById('sale-date').value = state.date;
@@ -446,6 +446,9 @@
                 document.getElementById('cost-plastic_cup').value = state.costs.plastic_cup || '';
             }
             if (state.note) document.getElementById('note').value = state.note || '';
+            
+            // Re-save directly under the new namespace
+            saveLocalState();
         } else {
             const today = new Date();
             const offset = today.getTimezoneOffset() * 60000;
@@ -497,7 +500,7 @@
         return `${parts[2]}/${parts[1]}/${parts[0]}`; 
     }
 
-    // Định dạng ngày sang Tiếng Anh kèm Thứ và KHÔNG kèm năm (Ví dụ: "Wed, Jul 1")
+    // Format date string to English (with weekday, WITHOUT year, e.g., "Wed, Jul 1")
     function formatEnglishDateWithoutYear(dateStr) {
         let parts = dateStr.split("/");
         if(parts.length !== 3) return dateStr;
@@ -508,7 +511,6 @@
         let dateObj = new Date(year, month, day);
         if(isNaN(dateObj)) return dateStr;
 
-        // Chỉ lấy Thứ, Tháng và Ngày
         const options = { weekday: 'short', month: 'short', day: 'numeric' };
         return dateObj.toLocaleDateString('en-US', options);
     }
@@ -579,7 +581,7 @@
             const result = await response.json();
             if(result.success) {
                 showToast("Synced successfully!");
-                localStorage.removeItem('khoCoffeeBackup');
+                localStorage.removeItem('dayupBackup');
                 selectedCustomers = [];
                 menuData.forEach(item => sales[item.id] = 0);
                 document.querySelectorAll('input[type="number"], input[type="text"]').forEach(el => el.value = "");
@@ -639,7 +641,6 @@
     function renderInvoiceBox(customerName, start, end, records) {
         document.getElementById('bill-cust-name').innerText = customerName;
         
-        // Thời gian khoảng (Period) vẫn giữ định dạng đầy đủ ngày/tháng để biết chính xác khoảng thanh toán
         const startFormatted = formatEnglishDateWithoutYear(start.split("-").reverse().join("/"));
         const endFormatted = formatEnglishDateWithoutYear(end.split("-").reverse().join("/"));
         document.getElementById('bill-period').innerText = `${startFormatted} - ${endFormatted}`;
@@ -649,7 +650,6 @@
 
         records.forEach(r => {
             totalSum += r.amount;
-            // Áp dụng định dạng ngày KHÔNG có năm ở danh sách bên dưới
             const englishDateStr = formatEnglishDateWithoutYear(r.date);
             html += `<div class="invoice-item">
                         <span>${englishDateStr}</span>
@@ -660,7 +660,7 @@
         html += `<div class="invoice-total">TOTAL AMOUNT: <span style="color:var(--success);">${totalSum.toLocaleString('vi-VN')} VND</span></div>`;
         document.getElementById('invoice-report-list').innerHTML = html;
 
-        // Cấu trúc API VietQR của ngân hàng OCB
+        // Auto-generation VietQR structure for OCB Bank
         const BANK_ID = "OCB"; 
         const ACCOUNT_NO = "0004100022246002";
         const TEMPLATE = "compact2"; 
@@ -688,7 +688,7 @@
             
             const downloadLink = document.createElement("a");
             downloadLink.href = imageURI;
-            downloadLink.download = `Invoice_KhoCoffee_${customerName}.png`;
+            downloadLink.download = `Invoice_DAYUP_${customerName}.png`;
             
             document.body.appendChild(downloadLink);
             downloadLink.click();
