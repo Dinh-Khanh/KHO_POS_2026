@@ -36,9 +36,9 @@
         .header { background-color: var(--card-bg); border-bottom: 2px solid var(--text-main); padding: 22px; text-align: center; position: sticky; top: 0; z-index: 10; }
         .header h1 { font-family: 'Montserrat', sans-serif; margin: 0; font-size: 1.8rem; color: var(--text-main); letter-spacing: 2px; text-transform: uppercase; font-weight: 900; }
         
-        .container { padding: 16px; max-width: 600px; margin: 0 auto; }
+        .container { padding: 16px; max-width: 600px; margin: 0 auto; box-sizing: border-box; }
         
-        .card { background: var(--card-bg); border-radius: 8px; padding: 24px; margin-bottom: 20px; border: 1px solid var(--border-color); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .card { background: var(--card-bg); border-radius: 8px; padding: 24px; margin-bottom: 20px; border: 1px solid var(--border-color); box-shadow: 0 2px 5px rgba(0,0,0,0.05); box-sizing: border-box; }
         .card-title { font-family: 'Montserrat', sans-serif; font-size: 1.1rem; font-weight: 800; color: var(--text-main); text-transform: uppercase; margin-top: 0; border-bottom: 3px solid var(--text-main); padding-bottom: 12px; margin-bottom: 20px; letter-spacing: 1px; }
         
         input[type="date"], input[type="number"], input[type="text"], select { width: 100%; padding: 14px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 1rem; box-sizing: border-box; background-color: var(--card-bg); color: var(--text-main); outline: none; transition: 0.2s; font-family: Arial, Helvetica, sans-serif; font-weight: bold; }
@@ -74,15 +74,36 @@
         .customer-input-group { display: flex; gap: 8px; margin-bottom: 15px; }
         .customer-input-group input { padding: 10px; }
 
+        /* Sửa lỗi hiển thị tràn viền cho phần Chọn Ngày */
+        .invoice-date-grid { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 12px; 
+            margin-bottom: 15px; 
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .invoice-date-grid input[type="date"] {
+            width: 100%;
+            box-sizing: border-box;
+        }
+
         /* Invoice styling for download */
         #invoice-capture-area { padding: 25px; background: #ffffff; border-radius: 12px; border: 2px solid #000; box-shadow: 0 4px 10px rgba(0,0,0,0.08); text-align: center; }
         .invoice-brand { font-family: 'Montserrat', sans-serif; font-size: 1.6rem; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 5px; }
         .invoice-subtitle { font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px; }
         .invoice-details-box { border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 15px 0; margin-bottom: 20px; text-align: left; }
-        .invoice-item { display: flex; justify-content: space-between; padding: 8px 0; font-size: 0.95rem; font-weight: bold; }
+        
+        /* Hiển thị ngày và giá tiền cùng một hàng */
+        .invoice-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; font-size: 0.85rem; font-weight: bold; gap: 10px; }
+        .invoice-item span:first-child { text-align: left; word-break: keep-all; }
+        .invoice-item span:last-child { text-align: right; white-space: nowrap; }
+
         .invoice-total { font-size: 1.25rem; text-align: right; margin-top: 10px; padding-top: 10px; border-top: 2px solid #000; font-family: 'Montserrat', sans-serif; font-weight: 900; }
+        
+        /* Khu vực QR: Chữ "Scan with..." nằm trên đầu mã QR */
         .qr-section { margin-top: 25px; border-top: 1px dashed #cccccc; padding-top: 20px; display: flex; flex-direction: column; align-items: center; }
-        .qr-section p { font-size: 0.8rem; font-weight: bold; color: var(--text-muted); margin-top: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .qr-section p { font-size: 0.8rem; font-weight: bold; color: var(--text-muted); margin-bottom: 12px; margin-top: 0; text-transform: uppercase; letter-spacing: 0.5px; }
         .qr-image { width: 220px; height: 220px; border: 1px solid var(--border-color); border-radius: 8px; padding: 5px; background: #fff; }
 
         .footer { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--card-bg); padding: 16px; box-sizing: border-box; border-top: 2px solid var(--text-main); z-index: 20; }
@@ -139,9 +160,9 @@
         <div id="menu-list"></div>
     </div>
 
-    <!-- DAILY CUSTOMER DEBTS CARD -->
+    <!-- DAILY CUSTOMER CARD -->
     <div class="card">
-        <h2 class="card-title">Daily Customers (Debts)</h2>
+        <h2 class="card-title">Daily Customers</h2>
         <div class="customer-input-group">
             <input type="text" id="new-cust-name" placeholder="Name (e.g. A Hung)">
             <input type="number" id="new-cust-price" placeholder="Price (K)" style="width: 120px;">
@@ -176,7 +197,8 @@
     <!-- CUSTOM INTERVAL INVOICE GENERATOR -->
     <div class="card">
         <h2 class="card-title">Generate Invoice Statement</h2>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+        
+        <div class="invoice-date-grid">
             <div>
                 <label style="font-size: 0.75rem;">From Date</label>
                 <input type="date" id="invoice-start">
@@ -189,13 +211,11 @@
         
         <div style="margin-bottom: 20px;">
             <label>Select Customer</label>
-            <select id="invoice-customer-select">
-                <!-- Will be dynamically populated with customer list -->
-            </select>
+            <select id="invoice-customer-select"></select>
         </div>
         
-        <button class="btn-load" id="btnInvoice" onclick="fetchRangeInvoices()" style="background-color: var(--text-main); color: var(--card-bg);">GENERATE INVOICE</button>
-        
+        <button class="btn-load" id="btnInvoice" onclick="fetchRangeInvoices()" style="background-color: var(--text-main); color: var(--card-bg); margin-bottom: 0;">GENERATE INVOICE</button>
+
         <!-- Generated Receipt Box (For Capture) -->
         <div id="invoice-container-box" style="display: none; margin-top: 25px;">
             <div id="invoice-capture-area">
@@ -204,32 +224,26 @@
                 
                 <div class="invoice-details-box">
                     <div style="font-size: 0.9rem; margin-bottom: 10px;">
-                        <strong>Customer:</strong> <span id="bill-cust-name" style="text-transform: uppercase;"></span>
+                        <strong>Customer:</strong> <span id="bill-cust-name" style="text-transform: none;"></span>
                     </div>
                     <div style="font-size: 0.8rem; margin-bottom: 15px; color: var(--text-muted);">
                         <strong>Period:</strong> <span id="bill-period"></span>
                     </div>
                     
-                    <div id="invoice-report-list">
-                        <!-- Individual drink days rendered here -->
-                    </div>
+                    <div id="invoice-report-list"></div>
                 </div>
 
                 <!-- VietQR Auto-Generator Section -->
                 <div class="qr-section">
-                    <img id="vietqr-img" class="qr-image" src="" alt="Payment QR Code">
                     <p>Scan with Mobile Banking to Pay</p>
-                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">
+                    <img id="vietqr-img" class="qr-image" src="" alt="Payment QR Code">
+                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 12px; font-weight: bold;">
                         LE DINH KHANH - OCB - 0004100022246002
                     </div>
                 </div>
             </div>
             
             <button class="btn-load" onclick="exportInvoiceToImage()" style="margin-top: 15px; background-color: #000; color: #fff; border: none;">📸 EXPORT IMAGE FILE</button>
-        </div>
-        
-        <div id="invoice-empty-placeholder">
-            <p style="color: var(--text-muted); font-size: 0.9rem; text-align: center; margin: 0;">Fill criteria and click "Generate Invoice" above.</p>
         </div>
     </div>
 
@@ -380,7 +394,7 @@
             <div class="customer-row">
                 <label class="customer-left">
                     <input type="checkbox" ${isChecked} onchange="toggleCustomerSelect('${cust.name}')">
-                    <span>${cust.name} (${cust.defaultPrice}K)</span>
+                    <span style="text-transform: none;">${cust.name} ${cust.defaultPrice}K</span>
                 </label>
                 <div class="customer-actions">
                     <button class="btn-sm" onclick="editCustomer(${index})">Edit</button>
@@ -438,7 +452,6 @@
             document.getElementById('sale-date').value = (new Date(today - offset)).toISOString().split('T')[0];
         }
         
-        // Default range selection: Start of current month to today
         const currDateObj = new Date(document.getElementById('sale-date').value);
         const y = currDateObj.getFullYear();
         const m = currDateObj.getMonth();
@@ -482,6 +495,22 @@
     function formatDate(dateStr) {
         let parts = dateStr.split("-");
         return `${parts[2]}/${parts[1]}/${parts[0]}`; 
+    }
+
+    // Định dạng ngày sang Tiếng Anh kèm Thứ và KHÔNG kèm năm (Ví dụ: "Wed, Jul 1")
+    function formatEnglishDateWithoutYear(dateStr) {
+        let parts = dateStr.split("/");
+        if(parts.length !== 3) return dateStr;
+        let day = parseInt(parts[0], 10);
+        let month = parseInt(parts[1], 10) - 1;
+        let year = parseInt(parts[2], 10);
+        
+        let dateObj = new Date(year, month, day);
+        if(isNaN(dateObj)) return dateStr;
+
+        // Chỉ lấy Thứ, Tháng và Ngày
+        const options = { weekday: 'short', month: 'short', day: 'numeric' };
+        return dateObj.toLocaleDateString('en-US', options);
     }
 
     async function fetchData() {
@@ -565,7 +594,6 @@
         }
     }
 
-    // --- XUẤT HÓA ĐƠN THEO KHOẢNG NGÀY & KHÁCH HÀNG ---
     async function fetchRangeInvoices() {
         const startDate = document.getElementById('invoice-start').value;
         const endDate = document.getElementById('invoice-end').value;
@@ -592,15 +620,16 @@
             if (result.success && result.data && result.data.length > 0) {
                 renderInvoiceBox(customerName, startDate, endDate, result.data);
             } else {
-                showToast(`No nợ records found for ${customerName} within selected period.`);
+                showToast(`No records found for ${customerName} within selected period.`);
                 hideInvoiceBox();
             }
         } catch (e) {
             showToast("Offline simulation mode active...");
             renderInvoiceBox(customerName, startDate, endDate, [
-                { date: "01/07/2026", amount: 15000 },
-                { date: "05/07/2026", amount: 12000 },
-                { date: "12/07/2026", amount: 15000 }
+                { date: "01/07/2026", amount: 12000 },
+                { date: "02/07/2026", amount: 12000 },
+                { date: "03/07/2026", amount: 12000 },
+                { date: "14/07/2026", amount: 15000 }
             ]);
         } finally {
             btn.innerText = "GENERATE INVOICE"; btn.disabled = false;
@@ -610,18 +639,20 @@
     function renderInvoiceBox(customerName, start, end, records) {
         document.getElementById('bill-cust-name').innerText = customerName;
         
-        // Display period format: DD/MM/YYYY - DD/MM/YYYY
-        const d1 = start.split("-").reverse().join("/");
-        const d2 = end.split("-").reverse().join("/");
-        document.getElementById('bill-period').innerText = `${d1} - ${d2}`;
+        // Thời gian khoảng (Period) vẫn giữ định dạng đầy đủ ngày/tháng để biết chính xác khoảng thanh toán
+        const startFormatted = formatEnglishDateWithoutYear(start.split("-").reverse().join("/"));
+        const endFormatted = formatEnglishDateWithoutYear(end.split("-").reverse().join("/"));
+        document.getElementById('bill-period').innerText = `${startFormatted} - ${endFormatted}`;
 
         let html = "";
         let totalSum = 0;
 
         records.forEach(r => {
             totalSum += r.amount;
+            // Áp dụng định dạng ngày KHÔNG có năm ở danh sách bên dưới
+            const englishDateStr = formatEnglishDateWithoutYear(r.date);
             html += `<div class="invoice-item">
-                        <span>Day: ${r.date}</span>
+                        <span>${englishDateStr}</span>
                         <span style="color: var(--danger);">${r.amount.toLocaleString('vi-VN')} VND</span>
                      </div>`;
         });
@@ -629,27 +660,22 @@
         html += `<div class="invoice-total">TOTAL AMOUNT: <span style="color:var(--success);">${totalSum.toLocaleString('vi-VN')} VND</span></div>`;
         document.getElementById('invoice-report-list').innerHTML = html;
 
-        // --- CƠ CHẾ SINH VIETQR ĐỘNG ---
-        // Thông tin tài khoản nhận tiền:
+        // Cấu trúc API VietQR của ngân hàng OCB
         const BANK_ID = "OCB"; 
         const ACCOUNT_NO = "0004100022246002";
-        const TEMPLATE = "qr_only"; // Chỉ lấy vùng QR chính cho thẩm mỹ
+        const TEMPLATE = "compact2"; 
         const DESCRIPTION = encodeURIComponent(`${customerName} thanh toan ca phe`);
         
-        // Ghép API VietQR chuẩn
         const qrUrl = `https://api.vietqr.io/image/${BANK_ID}-${ACCOUNT_NO}-${TEMPLATE}.png?amount=${totalSum}&addInfo=${DESCRIPTION}`;
         
         const imgElement = document.getElementById("vietqr-img");
         imgElement.src = qrUrl;
 
-        // Hiển thị phần hóa đơn, ẩn gợi ý placeholder
         document.getElementById('invoice-container-box').style.display = "block";
-        document.getElementById('invoice-empty-placeholder').style.display = "none";
     }
 
     function hideInvoiceBox() {
         document.getElementById('invoice-container-box').style.display = "none";
-        document.getElementById('invoice-empty-placeholder').style.display = "block";
     }
 
     function exportInvoiceToImage() {
