@@ -46,8 +46,6 @@
         input::placeholder { color: var(--text-muted); font-weight: normal; }
         label { display: block; font-size: 0.85rem; font-weight: bold; color: var(--text-main); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;}
 
-        .date-display { font-family: 'Montserrat', sans-serif; font-size: 1.1rem; font-weight: 500; color: var(--text-main); text-align: center; margin-top: 15px; margin-bottom: 15px; text-transform: none; }
-
         .menu-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--border-color); }
         .menu-item:last-child { border-bottom: none; }
         .item-info .name { font-weight: bold; font-size: 1.1rem; color: var(--text-main); } 
@@ -82,16 +80,27 @@
             width: 100%;
             box-sizing: border-box;
         }
-        .invoice-date-grid input {
+        .invoice-date-grid input[type="date"] {
             width: 100%;
-            padding: 12px 4px;
-            font-size: 0.85rem;
+            padding: 10px 4px;
+            font-size: 0.8rem;
             box-sizing: border-box;
             text-align: center;
         }
         
-        #sale-date {
+        #sale-date-text {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 1rem;
+            box-sizing: border-box;
+            background-color: var(--card-bg);
+            color: var(--text-main);
+            font-weight: bold;
             text-align: center;
+            cursor: pointer;
+            margin-bottom: 10px;
         }
 
         #invoice-capture-area { padding: 25px; padding-top: 45px; margin-top: 20px; background: #ffffff; border-radius: 12px; border: 2px solid #000; box-shadow: 0 4px 10px rgba(0,0,0,0.08); text-align: center; }
@@ -135,10 +144,11 @@
             opacity: 0;
             transition: opacity 0.3s, bottom 0.3s;
         }
-        #toast.show {
-            visibility: visible;
-            opacity: 1;
-            bottom: 100px;
+        
+        .toast-active {
+            visibility: visible !important;
+            opacity: 1 !important;
+            bottom: 100px !important;
         }
     </style>
 </head>
@@ -152,8 +162,8 @@
     <!-- DATE OF RECORD CARD -->
     <div class="card">
         <h2 class="card-title">Date of Record</h2>
-        <input type="date" id="sale-date" lang="en" onchange="handleDateChange()" style="margin-bottom: 0;">
-        <div class="date-display" id="formatted-date"></div>
+        <input type="date" id="sale-date" style="display:none;" onchange="handleDateChange()">
+        <div id="sale-date-text" onclick="document.getElementById('sale-date').showPicker ? document.getElementById('sale-date').showPicker() : document.getElementById('sale-date').focus()"></div>
         <button class="btn-load" id="btnLoad" onclick="fetchData()">LOAD DATA</button>
     </div>
 
@@ -204,11 +214,11 @@
         <div class="invoice-date-grid">
             <div>
                 <label style="font-size: 0.75rem;">From Date</label>
-                <input type="date" id="invoice-start" lang="en" onchange="saveLocalState()">
+                <input type="date" id="invoice-start">
             </div>
             <div>
                 <label style="font-size: 0.75rem;">To Date</label>
-                <input type="date" id="invoice-end" lang="en" onchange="saveLocalState()">
+                <input type="date" id="invoice-end">
             </div>
         </div>
         
@@ -223,7 +233,7 @@
         <div id="invoice-container-box" style="display: none; margin-top: 25px;">
             <div id="invoice-capture-area">
                 <div class="invoice-brand">SÀI GÒN ĐEN ĐÁ</div>
-                <div class="invoice-subtitle" id="invoice-bill-title">INVOICE</div>
+                <div class="invoice-subtitle" id="invoice-bill-title">Debt Bill</div>
                 
                 <div class="invoice-details-box">
                     <div style="font-size: 0.9rem; margin-bottom: 10px;">
@@ -264,7 +274,6 @@
 <div id="toast"></div>
 
 <script>
-    // --- NOTE: REPLACE YOUR GOOGLE APPS SCRIPT WEB APP URL HERE ---
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwusW-aXDoL4gyuywmnZxeTsPHswvKenOY4uC0GhityagFJdIyFwxmM5eeJjTg-HX6gLw/exec";
 
     const menuData = [
@@ -294,26 +303,37 @@
     function showToast(message) {
         const toast = document.getElementById("toast");
         toast.innerText = message;
-        toast.classList.add("show");
+        toast.className = "toast-active";
         clearTimeout(toastTimeout);
         toastTimeout = setTimeout(() => {
-            toast.classList.remove("show");
+            toast.className = "";
         }, 3000);
     }
 
-    function handleDateChange() {
-        selectedCustomers = []; 
-        saveLocalState();
-        updateDateDisplay();
-        renderCustomers();
+    function updateDisplayDateText(dateStr) {
+        if(!dateStr) return;
+        const parts = dateStr.split("-");
+        if(parts.length !== 3) return;
+        const year = parseInt(parts[0], 10);
+        const month = parseInt(parts[1], 10) - 1;
+        const day = parseInt(parts[2], 10);
+        
+        const dateObj = new Date(year, month, day);
+        if(isNaN(dateObj)) return;
+
+        // English format: Day of week, Month Day, Year (e.g., Sunday, August 16, 2026)
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        let formattedString = dateObj.toLocaleDateString('en-US', options);
+        
+        document.getElementById('sale-date-text').innerText = formattedString;
     }
 
-    function updateDateDisplay() {
-        const dateInput = document.getElementById('sale-date').value;
-        if (!dateInput) return;
-        const d = new Date(dateInput);
-        const options = { year: 'numeric', month: 'long', day: 'numeric' };
-        document.getElementById('formatted-date').innerText = d.toLocaleDateString('en-US', options);
+    function handleDateChange() {
+        const dateVal = document.getElementById('sale-date').value;
+        updateDisplayDateText(dateVal);
+        selectedCustomers = []; 
+        saveLocalState();
+        renderCustomers();
     }
 
     function loadCustomers() {
@@ -432,33 +452,20 @@
                 condensed_milk: document.getElementById('cost-condensed_milk').value,
                 plastic_cup: document.getElementById('cost-plastic_cup').value
             },
-            note: document.getElementById('note').value,
-            invoiceStart: document.getElementById('invoice-start').value,
-            invoiceEnd: document.getElementById('invoice-end').value
+            note: document.getElementById('note').value
         };
         localStorage.setItem('dayupBackup', JSON.stringify(state));
-    }
-
-    // Helper to format YYYY-MM-DD to DD/MM/YYYY
-    function toDDMMYYYY(dateStr) {
-        if (!dateStr || !dateStr.includes('-')) return dateStr;
-        const p = dateStr.split('-');
-        if (p.length === 3) return `${p[2]}/${p[1]}/${p[0]}`;
-        return dateStr;
     }
 
     function loadLocalState() {
         loadCustomers();
         const saved = localStorage.getItem('dayupBackup') || localStorage.getItem('comateBackup') || localStorage.getItem('khoCoffeeBackup');
-        const today = new Date();
-        const offset = today.getTimezoneOffset() * 60000;
-        const isoToday = (new Date(today - offset)).toISOString().split('T')[0];
-
         if (saved) {
             const state = JSON.parse(saved);
-            if (state.date) document.getElementById('sale-date').value = state.date;
-            else document.getElementById('sale-date').value = isoToday;
-
+            if (state.date) {
+                document.getElementById('sale-date').value = state.date;
+                updateDisplayDateText(state.date);
+            }
             if (state.sales) sales = state.sales;
             if (state.selectedCustomers) selectedCustomers = state.selectedCustomers;
             if (state.costs) {
@@ -469,28 +476,23 @@
             }
             if (state.note) document.getElementById('note').value = state.note || '';
             
-            if (state.invoiceStart) {
-                document.getElementById('invoice-start').value = state.invoiceStart;
-            } else {
-                const firstDayOfMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-01`;
-                document.getElementById('invoice-start').value = firstDayOfMonth;
-            }
-
-            if (state.invoiceEnd) {
-                document.getElementById('invoice-end').value = state.invoiceEnd;
-            } else {
-                document.getElementById('invoice-end').value = isoToday;
-            }
-            
             saveLocalState();
         } else {
+            const today = new Date();
+            const offset = today.getTimezoneOffset() * 60000;
+            const isoToday = (new Date(today - offset)).toISOString().split('T')[0];
             document.getElementById('sale-date').value = isoToday;
-            const firstDayOfMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-01`;
-            document.getElementById('invoice-start').value = firstDayOfMonth;
-            document.getElementById('invoice-end').value = isoToday;
+            updateDisplayDateText(isoToday);
         }
+        
+        const currDateObj = new Date(document.getElementById('sale-date').value);
+        const y = currDateObj.getFullYear();
+        const m = currDateObj.getMonth();
+        const formattedStart = `${y}-${("0" + (m+1)).slice(-2)}-01`;
+        
+        document.getElementById('invoice-start').value = formattedStart;
+        document.getElementById('invoice-end').value = document.getElementById('sale-date').value;
 
-        updateDateDisplay();
         renderCustomers();
     }
 
@@ -527,7 +529,7 @@
         return `${parts[2]}/${parts[1]}/${parts[0]}`; 
     }
 
-    function formatEnglishDate(dateStr) {
+    function formatEnglishDateWithoutYear(dateStr) {
         let parts = dateStr.split("/");
         if(parts.length !== 3) return dateStr;
         let day = parseInt(parts[0], 10);
@@ -537,7 +539,7 @@
         let dateObj = new Date(year, month, day);
         if(isNaN(dateObj)) return dateStr;
 
-        const options = { year: 'numeric', month: 'long', day: 'numeric' };
+        const options = { weekday: 'short', month: 'short', day: 'numeric' };
         return dateObj.toLocaleDateString('en-US', options);
     }
 
@@ -610,9 +612,7 @@
                 localStorage.removeItem('dayupBackup');
                 selectedCustomers = [];
                 menuData.forEach(item => sales[item.id] = 0);
-                document.querySelectorAll('input[type="number"], input[type="text"]').forEach(el => {
-                    el.value = "";
-                });
+                document.querySelectorAll('input[type="number"], input[type="text"]').forEach(el => el.value = "");
                 renderMenu(); renderCustomers();
             } else {
                 showToast(result.message);
@@ -625,15 +625,12 @@
     }
 
     async function fetchRangeInvoices() {
-        const startInput = document.getElementById('invoice-start').value;
-        const endInput = document.getElementById('invoice-end').value;
+        const startDate = document.getElementById('invoice-start').value;
+        const endDate = document.getElementById('invoice-end').value;
         const customerName = document.getElementById('invoice-customer-select').value;
 
-        if (!startInput || !endInput) return showToast("Please input both dates!");
+        if (!startDate || !endDate) return showToast("Please select both dates!");
         if (!customerName) return showToast("Please select a customer!");
-
-        const startDate = toDDMMYYYY(startInput);
-        const endDate = toDDMMYYYY(endInput);
 
         const btn = document.getElementById('btnInvoice');
         btn.innerText = "Searching..."; btn.disabled = true;
@@ -651,14 +648,14 @@
             });
             const result = await response.json();
             if (result.success && result.data && result.data.length > 0) {
-                renderInvoiceBox(customerName, startInput, endInput, result.data);
+                renderInvoiceBox(customerName, startDate, endDate, result.data);
             } else {
                 showToast(`No records found for ${customerName} within selected period.`);
                 hideInvoiceBox();
             }
         } catch (e) {
             showToast("Offline simulation mode active...");
-            renderInvoiceBox(customerName, startInput, endInput, [
+            renderInvoiceBox(customerName, startDate, endDate, [
                 { date: "01/07/2026", amount: 12000 },
                 { date: "02/07/2026", amount: 12000 },
                 { date: "03/07/2026", amount: 12000 },
@@ -669,11 +666,11 @@
         }
     }
 
-    function renderInvoiceBox(customerName, startStr, endStr, records) {
+    function renderInvoiceBox(customerName, start, end, records) {
         document.getElementById('bill-cust-name').innerText = customerName;
         
-        const startFormatted = formatEnglishDate(startStr.split("-").reverse().join("/"));
-        const endFormatted = formatEnglishDate(endStr.split("-").reverse().join("/"));
+        const startFormatted = formatEnglishDateWithoutYear(start.split("-").reverse().join("/"));
+        const endFormatted = formatEnglishDateWithoutYear(end.split("-").reverse().join("/"));
         document.getElementById('bill-period').innerText = `${startFormatted} - ${endFormatted}`;
 
         let html = "";
@@ -681,11 +678,7 @@
 
         records.forEach(r => {
             totalSum += r.amount;
-            let formattedRecordDate = r.date;
-            if (r.date.includes("-")) {
-                formattedRecordDate = r.date.split("-").reverse().join("/");
-            }
-            const englishDateStr = formatEnglishDate(formattedRecordDate);
+            const englishDateStr = formatEnglishDateWithoutYear(r.date);
             html += `<div class="invoice-item">
                         <span>${englishDateStr}</span>
                         <span style="color: var(--danger);">${r.amount.toLocaleString('vi-VN')} VND</span>
