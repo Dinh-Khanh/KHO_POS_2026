@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SÀI GÒN ĐEN ĐÁ POS & Invoice</title>
+    <title>SÀI GÒN ĐEN ĐÁ/title>
     <meta name="apple-mobile-web-app-title" content="SÀI GÒN ĐEN ĐÁ">
     <meta name="application-name" content="SÀI GÒN ĐEN ĐÁ">
     
@@ -219,7 +219,7 @@
 
     <!-- CUSTOM INTERVAL INVOICE GENERATOR -->
     <div class="card">
-        <h2 class="card-title">Generate Invoice Statement</h2>
+        <h2 class="card-title">Invoice</h2>
         
         <div class="invoice-date-grid">
             <div>
@@ -245,8 +245,6 @@
         <div id="invoice-container-box" style="display: none; margin-top: 25px;">
             <div id="invoice-capture-area">
                 <div class="invoice-brand">SÀI GÒN ĐEN ĐÁ</div>
-                <div class="invoice-subtitle" id="invoice-bill-title">Debt Bill</div>
-                
                 <div class="invoice-details-box">
                     <div style="font-size: 0.9rem; margin-bottom: 10px;">
                         <strong>Customer:</strong> <span id="bill-cust-name" style="text-transform: none;"></span>
@@ -254,13 +252,10 @@
                     <div style="font-size: 0.8rem; margin-bottom: 15px; color: var(--text-muted);">
                         <strong>Period:</strong> <span id="bill-period"></span>
                     </div>
-                    
                     <div id="invoice-report-list"></div>
                 </div>
-
                 <!-- VietQR Auto-Generator Section -->
                 <div class="qr-section">
-                    <p>Scan with Mobile Banking to Pay</p>
                     <img id="vietqr-img" class="qr-image" src="" alt="Payment QR Code">
                     <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 12px; font-weight: bold;">
                         LE DINH KHANH - OCB - 0004100022246002
