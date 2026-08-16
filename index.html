@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DAYUP POS & Invoice</title>
-    <meta name="apple-mobile-web-app-title" content="DAYUP POS">
-    <meta name="application-name" content="DAYUP POS">
+    <title>SÀI GÒN ĐEN ĐÁ POS & Invoice</title>
+    <meta name="apple-mobile-web-app-title" content="SÀI GÒN ĐEN ĐÁ">
+    <meta name="application-name" content="SÀI GÒN ĐEN ĐÁ">
     
     <link rel="icon" type="image/png" href="https://img.icons8.com/ios-filled/512/000000/cafe.png">
     <link class="apple-touch-icon" href="https://img.icons8.com/ios-filled/512/000000/cafe.png">
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght=800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@800;900&display=swap" rel="stylesheet">
 
     <!-- html2canvas Library for capturing elements -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -87,7 +87,7 @@
             box-sizing: border-box;
         }
 
-        #invoice-capture-area { padding: 25px; background: #ffffff; border-radius: 12px; border: 2px solid #000; box-shadow: 0 4px 10px rgba(0,0,0,0.08); text-align: center; }
+        #invoice-capture-area { padding: 25px; padding-top: 45px; margin-top: 20px; background: #ffffff; border-radius: 12px; border: 2px solid #000; box-shadow: 0 4px 10px rgba(0,0,0,0.08); text-align: center; }
         .invoice-brand { font-family: 'Montserrat', sans-serif; font-size: 1.6rem; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 5px; }
         .invoice-subtitle { font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px; }
         .invoice-details-box { border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 15px 0; margin-bottom: 20px; text-align: left; }
@@ -138,7 +138,7 @@
 <body>
 
 <div class="header">
-    <h1>DAYUP</h1>
+    <h1>SÀI GÒN ĐEN ĐÁ</h1>
 </div>
 
 <div class="container">
@@ -215,7 +215,7 @@
         <!-- Generated Receipt Box (For Capture) -->
         <div id="invoice-container-box" style="display: none; margin-top: 25px;">
             <div id="invoice-capture-area">
-                <div class="invoice-brand">DAYUP</div>
+                <div class="invoice-brand">SÀI GÒN ĐEN ĐÁ</div>
                 <div class="invoice-subtitle" id="invoice-bill-title">Debt Bill</div>
                 
                 <div class="invoice-details-box">
@@ -309,7 +309,6 @@
         document.getElementById('formatted-date').innerText = d.toLocaleDateString('en-US', options);
     }
 
-    // Migration logic from previous storage namespaces
     function loadCustomers() {
         const savedCust = localStorage.getItem('dayupCustomers') || localStorage.getItem('comateCustomers') || localStorage.getItem('khoCoffeeCustomers');
         if (savedCust) {
@@ -447,7 +446,6 @@
             }
             if (state.note) document.getElementById('note').value = state.note || '';
             
-            // Re-save directly under the new namespace
             saveLocalState();
         } else {
             const today = new Date();
@@ -500,7 +498,6 @@
         return `${parts[2]}/${parts[1]}/${parts[0]}`; 
     }
 
-    // Format date string to English (with weekday, WITHOUT year, e.g., "Wed, Jul 1")
     function formatEnglishDateWithoutYear(dateStr) {
         let parts = dateStr.split("/");
         if(parts.length !== 3) return dateStr;
@@ -660,7 +657,6 @@
         html += `<div class="invoice-total">TOTAL AMOUNT: <span style="color:var(--success);">${totalSum.toLocaleString('vi-VN')} VND</span></div>`;
         document.getElementById('invoice-report-list').innerHTML = html;
 
-        // Auto-generation VietQR structure for OCB Bank
         const BANK_ID = "OCB"; 
         const ACCOUNT_NO = "0004100022246002";
         const TEMPLATE = "compact2"; 
@@ -688,7 +684,7 @@
             
             const downloadLink = document.createElement("a");
             downloadLink.href = imageURI;
-            downloadLink.download = `Invoice_DAYUP_${customerName}.png`;
+            downloadLink.download = `Invoice_SAI_GON_DEN_DA_${customerName}.png`;
             
             document.body.appendChild(downloadLink);
             downloadLink.click();
