@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SÀI GÒN ĐEN ĐÁ POS</title>
+    <title>SÀI GÒN ĐEN ĐÁ</title>
     <meta name="apple-mobile-web-app-title" content="SÀI GÒN ĐEN ĐÁ">
     <meta name="application-name" content="SÀI GÒN ĐEN ĐÁ">
     
@@ -579,7 +579,8 @@
         let dateObj = new Date(year, month, day);
         if(isNaN(dateObj)) return dateStr;
 
-        const options = { weekday: 'short', month: 'short', day: 'numeric' };
+        // Chỉ giữ lại tháng và ngày (bỏ thứ)
+        const options = { month: 'short', day: 'numeric' };
         return dateObj.toLocaleDateString('en-US', options);
     }
 
