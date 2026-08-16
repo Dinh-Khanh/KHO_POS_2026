@@ -82,10 +82,10 @@
             width: 100%;
             box-sizing: border-box;
         }
-        .invoice-date-grid input[type="date"] {
+        .invoice-date-grid input {
             width: 100%;
-            padding: 10px 4px;
-            font-size: 0.8rem;
+            padding: 12px 4px;
+            font-size: 0.85rem;
             box-sizing: border-box;
             text-align: center;
         }
@@ -203,12 +203,12 @@
         
         <div class="invoice-date-grid">
             <div>
-                <label style="font-size: 0.75rem;">From Date</label>
-                <input type="date" id="invoice-start">
+                <label style="font-size: 0.75rem;">From Date (DD/MM/YYYY)</label>
+                <input type="text" id="invoice-start" placeholder="DD/MM/YYYY" maxlength="10">
             </div>
             <div>
-                <label style="font-size: 0.75rem;">To Date</label>
-                <input type="date" id="invoice-end">
+                <label style="font-size: 0.75rem;">To Date (DD/MM/YYYY)</label>
+                <input type="text" id="invoice-end" placeholder="DD/MM/YYYY" maxlength="10">
             </div>
         </div>
         
@@ -223,7 +223,7 @@
         <div id="invoice-container-box" style="display: none; margin-top: 25px;">
             <div id="invoice-capture-area">
                 <div class="invoice-brand">SÀI GÒN ĐEN ĐÁ</div>
-                <div class="invoice-subtitle" id="invoice-bill-title">Debt Bill</div>
+                <div class="invoice-subtitle" id="invoice-bill-title">INVOICE</div>
                 
                 <div class="invoice-details-box">
                     <div style="font-size: 0.9rem; margin-bottom: 10px;">
@@ -432,9 +432,27 @@
                 condensed_milk: document.getElementById('cost-condensed_milk').value,
                 plastic_cup: document.getElementById('cost-plastic_cup').value
             },
-            note: document.getElementById('note').value
+            note: document.getElementById('note').value,
+            invoiceStart: document.getElementById('invoice-start').value,
+            invoiceEnd: document.getElementById('invoice-end').value
         };
         localStorage.setItem('dayupBackup', JSON.stringify(state));
+    }
+
+    // Helper to format YYYY-MM-DD to DD/MM/YYYY
+    function toDDMMYYYY(dateStr) {
+        if (!dateStr || !dateStr.includes('-')) return dateStr;
+        const p = dateStr.split('-');
+        if (p.length === 3) return `${p[2]}/${p[1]}/${p[0]}`;
+        return dateStr;
+    }
+
+    // Helper to format DD/MM/YYYY to YYYY-MM-DD for backend
+    function toYYYYMMDD(dateStr) {
+        if (!dateStr || !dateStr.includes('/')) return dateStr;
+        const p = dateStr.split('/');
+        if (p.length === 3) return `${p[2]}-${p[1]}-${p[0]}`;
+        return dateStr;
     }
 
     function loadLocalState() {
@@ -453,20 +471,26 @@
             }
             if (state.note) document.getElementById('note').value = state.note || '';
             
+            if (state.invoiceStart) {
+                document.getElementById('invoice-start').value = state.invoiceStart;
+            }
+            if (state.invoiceEnd) {
+                document.getElementById('invoice-end').value = state.invoiceEnd;
+            }
+            
             saveLocalState();
         } else {
             const today = new Date();
             const offset = today.getTimezoneOffset() * 60000;
-            document.getElementById('sale-date').value = (new Date(today - offset)).toISOString().split('T')[0];
+            const isoToday = (new Date(today - offset)).toISOString().split('T')[0];
+            document.getElementById('sale-date').value = isoToday;
+            
+            const y = today.getFullYear();
+            const m = today.getMonth();
+            const formattedStart = `${("0" + 1).slice(-2)}/${("0" + (m+1)).slice(-2)}/${y}`;
+            document.getElementById('invoice-start').value = formattedStart;
+            document.getElementById('invoice-end').value = toDDMMYYYY(isoToday);
         }
-        
-        const currDateObj = new Date(document.getElementById('sale-date').value);
-        const y = currDateObj.getFullYear();
-        const m = currDateObj.getMonth();
-        const formattedStart = `${y}-${("0" + (m+1)).slice(-2)}-01`;
-        
-        document.getElementById('invoice-start').value = formattedStart;
-        document.getElementById('invoice-end').value = document.getElementById('sale-date').value;
 
         updateDateDisplay();
         renderCustomers();
@@ -588,7 +612,9 @@
                 localStorage.removeItem('dayupBackup');
                 selectedCustomers = [];
                 menuData.forEach(item => sales[item.id] = 0);
-                document.querySelectorAll('input[type="number"], input[type="text"]').forEach(el => el.value = "");
+                document.querySelectorAll('input[type="number"], input[type="text"]').forEach(el => {
+                    if(el.id !== 'invoice-start' && el.id !== 'invoice-end') el.value = "";
+                });
                 renderMenu(); renderCustomers();
             } else {
                 showToast(result.message);
@@ -601,12 +627,15 @@
     }
 
     async function fetchRangeInvoices() {
-        const startDate = document.getElementById('invoice-start').value;
-        const endDate = document.getElementById('invoice-end').value;
+        const startInput = document.getElementById('invoice-start').value;
+        const endInput = document.getElementById('invoice-end').value;
         const customerName = document.getElementById('invoice-customer-select').value;
 
-        if (!startDate || !endDate) return showToast("Please select both dates!");
+        if (!startInput || !endInput) return showToast("Please input both dates!");
         if (!customerName) return showToast("Please select a customer!");
+
+        const startDate = toYYYYMMDD(startInput);
+        const endDate = toYYYYMMDD(endInput);
 
         const btn = document.getElementById('btnInvoice');
         btn.innerText = "Searching..."; btn.disabled = true;
@@ -702,6 +731,23 @@
             showToast("Failed to generate image. Please take a manual screenshot.");
         });
     }
+
+    // Auto add slashes for text inputs simulating DD/MM/YYYY
+    document.getElementById('invoice-start').addEventListener('input', function(e) {
+        let v = e.target.value.replace(/\D/g, '');
+        if (v.length >= 2) v = v.substring(0,2) + '/' + v.substring(2);
+        if (v.length >= 5) v = v.substring(0,5) + '/' + v.substring(5, 9);
+        e.target.value = v;
+        saveLocalState();
+    });
+
+    document.getElementById('invoice-end').addEventListener('input', function(e) {
+        let v = e.target.value.replace(/\D/g, '');
+        if (v.length >= 2) v = v.substring(0,2) + '/' + v.substring(2);
+        if (v.length >= 5) v = v.substring(0,5) + '/' + v.substring(5, 9);
+        e.target.value = v;
+        saveLocalState();
+    });
 
     loadLocalState();
     renderMenu();
