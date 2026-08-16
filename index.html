@@ -312,7 +312,7 @@
         const dateInput = document.getElementById('sale-date').value;
         if (!dateInput) return;
         const d = new Date(dateInput);
-        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        const options = { year: 'numeric', month: 'long', day: 'numeric' };
         document.getElementById('formatted-date').innerText = d.toLocaleDateString('en-US', options);
     }
 
@@ -527,7 +527,7 @@
         return `${parts[2]}/${parts[1]}/${parts[0]}`; 
     }
 
-    function formatEnglishDateWithoutYear(dateStr) {
+    function formatEnglishDate(dateStr) {
         let parts = dateStr.split("/");
         if(parts.length !== 3) return dateStr;
         let day = parseInt(parts[0], 10);
@@ -537,7 +537,7 @@
         let dateObj = new Date(year, month, day);
         if(isNaN(dateObj)) return dateStr;
 
-        const options = { weekday: 'short', month: 'short', day: 'numeric' };
+        const options = { year: 'numeric', month: 'long', day: 'numeric' };
         return dateObj.toLocaleDateString('en-US', options);
     }
 
@@ -672,8 +672,8 @@
     function renderInvoiceBox(customerName, startStr, endStr, records) {
         document.getElementById('bill-cust-name').innerText = customerName;
         
-        const startFormatted = formatEnglishDateWithoutYear(startStr.split("-").reverse().join("/"));
-        const endFormatted = formatEnglishDateWithoutYear(endStr.split("-").reverse().join("/"));
+        const startFormatted = formatEnglishDate(startStr.split("-").reverse().join("/"));
+        const endFormatted = formatEnglishDate(endStr.split("-").reverse().join("/"));
         document.getElementById('bill-period').innerText = `${startFormatted} - ${endFormatted}`;
 
         let html = "";
@@ -685,7 +685,7 @@
             if (r.date.includes("-")) {
                 formattedRecordDate = r.date.split("-").reverse().join("/");
             }
-            const englishDateStr = formatEnglishDateWithoutYear(formattedRecordDate);
+            const englishDateStr = formatEnglishDate(formattedRecordDate);
             html += `<div class="invoice-item">
                         <span>${englishDateStr}</span>
                         <span style="color: var(--danger);">${r.amount.toLocaleString('vi-VN')} VND</span>
