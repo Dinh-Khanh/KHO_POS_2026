@@ -75,17 +75,24 @@
         .invoice-date-grid { 
             display: grid; 
             grid-template-columns: 1fr 1fr; 
-            gap: 6px; 
+            gap: 10px; 
             margin-bottom: 15px; 
             width: 100%;
             box-sizing: border-box;
         }
-        .invoice-date-grid input[type="date"] {
+        
+        .custom-date-box {
             width: 100%;
-            padding: 10px 4px;
-            font-size: 0.8rem;
+            padding: 12px 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 0.9rem;
             box-sizing: border-box;
+            background-color: var(--card-bg);
+            color: var(--text-main);
+            font-weight: bold;
             text-align: center;
+            cursor: pointer;
         }
         
         #sale-date-text {
@@ -209,16 +216,18 @@
 
     <!-- CUSTOM INTERVAL INVOICE GENERATOR -->
     <div class="card">
-        <h2 class="card-title">Generate Invoice Statement</h2>
+        <h2 class="card-title">Invoice</h2>
         
         <div class="invoice-date-grid">
             <div>
                 <label style="font-size: 0.75rem;">From Date</label>
-                <input type="date" id="invoice-start">
+                <input type="date" id="invoice-start" style="display:none;" onchange="handleInvoiceStartChange()">
+                <div id="invoice-start-text" class="custom-date-box" onclick="document.getElementById('invoice-start').showPicker ? document.getElementById('invoice-start').showPicker() : document.getElementById('invoice-start').focus()"></div>
             </div>
             <div>
                 <label style="font-size: 0.75rem;">To Date</label>
-                <input type="date" id="invoice-end">
+                <input type="date" id="invoice-end" style="display:none;" onchange="handleInvoiceEndChange()">
+                <div id="invoice-end-text" class="custom-date-box" onclick="document.getElementById('invoice-end').showPicker ? document.getElementById('invoice-end').showPicker() : document.getElementById('invoice-end').focus()"></div>
             </div>
         </div>
         
@@ -232,9 +241,7 @@
         <!-- Generated Receipt Box (For Capture) -->
         <div id="invoice-container-box" style="display: none; margin-top: 25px;">
             <div id="invoice-capture-area">
-                <div class="invoice-brand">SÀI GÒN ĐEN ĐÁ</div>
-                <div class="invoice-subtitle" id="invoice-bill-title">Debt Bill</div>
-                
+                <div class="invoice-brand">SÀI GÒN ĐEN ĐÁ</div>         
                 <div class="invoice-details-box">
                     <div style="font-size: 0.9rem; margin-bottom: 10px;">
                         <strong>Customer:</strong> <span id="bill-cust-name" style="text-transform: none;"></span>
@@ -248,7 +255,6 @@
 
                 <!-- VietQR Auto-Generator Section -->
                 <div class="qr-section">
-                    <p>Scan with Mobile Banking to Pay</p>
                     <img id="vietqr-img" class="qr-image" src="" alt="Payment QR Code">
                     <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 12px; font-weight: bold;">
                         LE DINH KHANH - OCB - 0004100022246002
@@ -321,11 +327,29 @@
         const dateObj = new Date(year, month, day);
         if(isNaN(dateObj)) return;
 
-        // English format: Day of week, Month Day, Year (e.g., Sunday, August 16, 2026)
+        // English format with weekday for Date of Record: Sunday, August 16, 2026
         const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
         let formattedString = dateObj.toLocaleDateString('en-US', options);
         
         document.getElementById('sale-date-text').innerText = formattedString;
+    }
+
+    function updateInvoiceDateText(dateStr, elementId) {
+        if(!dateStr) return;
+        const parts = dateStr.split("-");
+        if(parts.length !== 3) return;
+        const year = parseInt(parts[0], 10);
+        const month = parseInt(parts[1], 10) - 1;
+        const day = parseInt(parts[2], 10);
+        
+        const dateObj = new Date(year, month, day);
+        if(isNaN(dateObj)) return;
+
+        // English format WITHOUT weekday for Invoice dates: August 16, 2026
+        const options = { year: 'numeric', month: 'long', day: 'numeric' };
+        let formattedString = dateObj.toLocaleDateString('en-US', options);
+        
+        document.getElementById(elementId).innerText = formattedString;
     }
 
     function handleDateChange() {
@@ -334,6 +358,16 @@
         selectedCustomers = []; 
         saveLocalState();
         renderCustomers();
+    }
+
+    function handleInvoiceStartChange() {
+        const val = document.getElementById('invoice-start').value;
+        updateInvoiceDateText(val, 'invoice-start-text');
+    }
+
+    function handleInvoiceEndChange() {
+        const val = document.getElementById('invoice-end').value;
+        updateInvoiceDateText(val, 'invoice-end-text');
     }
 
     function loadCustomers() {
@@ -491,7 +525,11 @@
         const formattedStart = `${y}-${("0" + (m+1)).slice(-2)}-01`;
         
         document.getElementById('invoice-start').value = formattedStart;
-        document.getElementById('invoice-end').value = document.getElementById('sale-date').value;
+        updateInvoiceDateText(formattedStart, 'invoice-start-text');
+
+        const currentVal = document.getElementById('sale-date').value;
+        document.getElementById('invoice-end').value = currentVal;
+        updateInvoiceDateText(currentVal, 'invoice-end-text');
 
         renderCustomers();
     }
