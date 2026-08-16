@@ -122,7 +122,7 @@
         .invoice-item span:first-child { text-align: left; word-break: keep-all; }
         .invoice-item span:last-child { text-align: right; white-space: nowrap; }
 
-        .invoice-total { font-size: 1.2rem; text-align: right; margin-top: 10px; padding-top: 10px; border-top: none; font-family: 'Montserrat', sans-serif; font-weight: 900; }
+        .invoice-total { font-size: 1.2rem; text-align: right; margin-top: 10px; padding-top: 10px; border-top: 2px solid #000; font-family: 'Montserrat', sans-serif; font-weight: 900; }
         
         .qr-section { margin-top: 25px; border-top: 1px solid #cccccc; padding-top: 20px; display: flex; flex-direction: column; align-items: center; }
         .qr-section p { font-size: 0.8rem; font-weight: bold; color: var(--text-muted); margin-bottom: 12px; margin-top: 0; text-transform: uppercase; letter-spacing: 0.5px; }
@@ -251,7 +251,7 @@
                     <div style="font-size: 0.9rem; margin-bottom: 10px;">
                         <strong>Customer:</strong> <span id="bill-cust-name" style="text-transform: none;"></span>
                     </div>
-                    <div style="font-size: 0.8rem; margin-bottom: 15px; color: var(--text-main);">
+                    <div style="font-size: 0.8rem; margin-bottom: 15px; color: var(--text-muted);">
                         <strong>Period:</strong> <span id="bill-period"></span>
                     </div>
                     
@@ -262,8 +262,9 @@
                 <div class="qr-section">
                     <p>Scan with Mobile Banking to Pay</p>
                     <img id="vietqr-img" class="qr-image" src="" alt="Payment QR Code">
-                    <div style="font-size: 0.7rem; color: var(--text-main); margin-top: 12px; font-weight: bold; word-break: break-all; padding: 0 5px;">
-                        LE DINH KHANH - OCB - 0004100022246002
+                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 12px; font-weight: bold; line-height: 1.5;">
+                        LE DINH KHANH - OCB<br>
+                        0004100022246002
                     </div>
                 </div>
             </div>
