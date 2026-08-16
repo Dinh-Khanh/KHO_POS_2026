@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SÀI GÒN ĐEN ĐÁ POS & Invoice</title>
+    <title>SÀI GÒN ĐEN ĐÁ</title>
     <meta name="apple-mobile-web-app-title" content="SÀI GÒN ĐEN ĐÁ">
     <meta name="application-name" content="SÀI GÒN ĐEN ĐÁ">
     
@@ -152,7 +152,8 @@
     <!-- DATE OF RECORD CARD -->
     <div class="card">
         <h2 class="card-title">Date of Record</h2>
-        <input type="date" id="sale-date" onchange="handleDateChange()" style="margin-bottom: 0;">
+        <!-- Đưa lại type="date" nhưng dùng thuộc tính lang="en" để ép giao diện lịch sang tiếng Anh -->
+        <input type="date" id="sale-date" lang="en" onchange="handleDateChange()" style="margin-bottom: 0;">
         <div class="date-display" id="formatted-date"></div>
         <button class="btn-load" id="btnLoad" onclick="fetchData()">LOAD DATA</button>
     </div>
@@ -741,7 +742,7 @@
         saveLocalState();
     });
 
-    document.getElementById('invoice-end').addEventListener('input', function(e) {
+    document.getElementById('invoice-end').addEventListener('input', function(e)  {
         let v = e.target.value.replace(/\D/g, '');
         if (v.length >= 2) v = v.substring(0,2) + '/' + v.substring(2);
         if (v.length >= 5) v = v.substring(0,5) + '/' + v.substring(5, 9);
