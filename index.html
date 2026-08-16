@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SÀI GÒN ĐEN ĐÁ</title>
+    <title>SÀI GÒN ĐEN ĐÁ POS & Invoice</title>
     <meta name="apple-mobile-web-app-title" content="SÀI GÒN ĐEN ĐÁ">
     <meta name="application-name" content="SÀI GÒN ĐEN ĐÁ">
     
@@ -152,7 +152,6 @@
     <!-- DATE OF RECORD CARD -->
     <div class="card">
         <h2 class="card-title">Date of Record</h2>
-        <!-- Đưa lại type="date" nhưng dùng thuộc tính lang="en" để ép giao diện lịch sang tiếng Anh -->
         <input type="date" id="sale-date" lang="en" onchange="handleDateChange()" style="margin-bottom: 0;">
         <div class="date-display" id="formatted-date"></div>
         <button class="btn-load" id="btnLoad" onclick="fetchData()">LOAD DATA</button>
@@ -204,12 +203,12 @@
         
         <div class="invoice-date-grid">
             <div>
-                <label style="font-size: 0.75rem;">From Date (DD/MM/YYYY)</label>
-                <input type="text" id="invoice-start" placeholder="DD/MM/YYYY" maxlength="10">
+                <label style="font-size: 0.75rem;">From Date</label>
+                <input type="date" id="invoice-start" lang="en" onchange="saveLocalState()">
             </div>
             <div>
-                <label style="font-size: 0.75rem;">To Date (DD/MM/YYYY)</label>
-                <input type="text" id="invoice-end" placeholder="DD/MM/YYYY" maxlength="10">
+                <label style="font-size: 0.75rem;">To Date</label>
+                <input type="date" id="invoice-end" lang="en" onchange="saveLocalState()">
             </div>
         </div>
         
@@ -448,20 +447,18 @@
         return dateStr;
     }
 
-    // Helper to format DD/MM/YYYY to YYYY-MM-DD for backend
-    function toYYYYMMDD(dateStr) {
-        if (!dateStr || !dateStr.includes('/')) return dateStr;
-        const p = dateStr.split('/');
-        if (p.length === 3) return `${p[2]}-${p[1]}-${p[0]}`;
-        return dateStr;
-    }
-
     function loadLocalState() {
         loadCustomers();
         const saved = localStorage.getItem('dayupBackup') || localStorage.getItem('comateBackup') || localStorage.getItem('khoCoffeeBackup');
+        const today = new Date();
+        const offset = today.getTimezoneOffset() * 60000;
+        const isoToday = (new Date(today - offset)).toISOString().split('T')[0];
+
         if (saved) {
             const state = JSON.parse(saved);
             if (state.date) document.getElementById('sale-date').value = state.date;
+            else document.getElementById('sale-date').value = isoToday;
+
             if (state.sales) sales = state.sales;
             if (state.selectedCustomers) selectedCustomers = state.selectedCustomers;
             if (state.costs) {
@@ -474,23 +471,23 @@
             
             if (state.invoiceStart) {
                 document.getElementById('invoice-start').value = state.invoiceStart;
+            } else {
+                const firstDayOfMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-01`;
+                document.getElementById('invoice-start').value = firstDayOfMonth;
             }
+
             if (state.invoiceEnd) {
                 document.getElementById('invoice-end').value = state.invoiceEnd;
+            } else {
+                document.getElementById('invoice-end').value = isoToday;
             }
             
             saveLocalState();
         } else {
-            const today = new Date();
-            const offset = today.getTimezoneOffset() * 60000;
-            const isoToday = (new Date(today - offset)).toISOString().split('T')[0];
             document.getElementById('sale-date').value = isoToday;
-            
-            const y = today.getFullYear();
-            const m = today.getMonth();
-            const formattedStart = `${("0" + 1).slice(-2)}/${("0" + (m+1)).slice(-2)}/${y}`;
-            document.getElementById('invoice-start').value = formattedStart;
-            document.getElementById('invoice-end').value = toDDMMYYYY(isoToday);
+            const firstDayOfMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-01`;
+            document.getElementById('invoice-start').value = firstDayOfMonth;
+            document.getElementById('invoice-end').value = isoToday;
         }
 
         updateDateDisplay();
@@ -614,7 +611,7 @@
                 selectedCustomers = [];
                 menuData.forEach(item => sales[item.id] = 0);
                 document.querySelectorAll('input[type="number"], input[type="text"]').forEach(el => {
-                    if(el.id !== 'invoice-start' && el.id !== 'invoice-end') el.value = "";
+                    el.value = "";
                 });
                 renderMenu(); renderCustomers();
             } else {
@@ -635,8 +632,8 @@
         if (!startInput || !endInput) return showToast("Please input both dates!");
         if (!customerName) return showToast("Please select a customer!");
 
-        const startDate = toYYYYMMDD(startInput);
-        const endDate = toYYYYMMDD(endInput);
+        const startDate = toDDMMYYYY(startInput);
+        const endDate = toDDMMYYYY(endInput);
 
         const btn = document.getElementById('btnInvoice');
         btn.innerText = "Searching..."; btn.disabled = true;
@@ -654,14 +651,14 @@
             });
             const result = await response.json();
             if (result.success && result.data && result.data.length > 0) {
-                renderInvoiceBox(customerName, startDate, endDate, result.data);
+                renderInvoiceBox(customerName, startInput, endInput, result.data);
             } else {
                 showToast(`No records found for ${customerName} within selected period.`);
                 hideInvoiceBox();
             }
         } catch (e) {
             showToast("Offline simulation mode active...");
-            renderInvoiceBox(customerName, startDate, endDate, [
+            renderInvoiceBox(customerName, startInput, endInput, [
                 { date: "01/07/2026", amount: 12000 },
                 { date: "02/07/2026", amount: 12000 },
                 { date: "03/07/2026", amount: 12000 },
@@ -672,11 +669,11 @@
         }
     }
 
-    function renderInvoiceBox(customerName, start, end, records) {
+    function renderInvoiceBox(customerName, startStr, endStr, records) {
         document.getElementById('bill-cust-name').innerText = customerName;
         
-        const startFormatted = formatEnglishDateWithoutYear(start.split("-").reverse().join("/"));
-        const endFormatted = formatEnglishDateWithoutYear(end.split("-").reverse().join("/"));
+        const startFormatted = formatEnglishDateWithoutYear(startStr.split("-").reverse().join("/"));
+        const endFormatted = formatEnglishDateWithoutYear(endStr.split("-").reverse().join("/"));
         document.getElementById('bill-period').innerText = `${startFormatted} - ${endFormatted}`;
 
         let html = "";
@@ -684,7 +681,11 @@
 
         records.forEach(r => {
             totalSum += r.amount;
-            const englishDateStr = formatEnglishDateWithoutYear(r.date);
+            let formattedRecordDate = r.date;
+            if (r.date.includes("-")) {
+                formattedRecordDate = r.date.split("-").reverse().join("/");
+            }
+            const englishDateStr = formatEnglishDateWithoutYear(formattedRecordDate);
             html += `<div class="invoice-item">
                         <span>${englishDateStr}</span>
                         <span style="color: var(--danger);">${r.amount.toLocaleString('vi-VN')} VND</span>
@@ -732,23 +733,6 @@
             showToast("Failed to generate image. Please take a manual screenshot.");
         });
     }
-
-    // Auto add slashes for text inputs simulating DD/MM/YYYY
-    document.getElementById('invoice-start').addEventListener('input', function(e) {
-        let v = e.target.value.replace(/\D/g, '');
-        if (v.length >= 2) v = v.substring(0,2) + '/' + v.substring(2);
-        if (v.length >= 5) v = v.substring(0,5) + '/' + v.substring(5, 9);
-        e.target.value = v;
-        saveLocalState();
-    });
-
-    document.getElementById('invoice-end').addEventListener('input', function(e)  {
-        let v = e.target.value.replace(/\D/g, '');
-        if (v.length >= 2) v = v.substring(0,2) + '/' + v.substring(2);
-        if (v.length >= 5) v = v.substring(0,5) + '/' + v.substring(5, 9);
-        e.target.value = v;
-        saveLocalState();
-    });
 
     loadLocalState();
     renderMenu();
